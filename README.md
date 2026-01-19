@@ -133,3 +133,38 @@ Il sistema calcola automaticamente la durata delle prenotazioni in base a:
 - `GET /api/trasportatori/dropdown` - Lista per dropdown
 - `POST /api/trasportatori` - Crea trasportatore
 - `PUT /api/trasportatori/:id` - Modifica trasportatore
+
+## Deployment Online
+
+### Frontend (Vercel)
+Il frontend è deployato su Vercel:
+- **URL**: https://frontend-two-vert-37.vercel.app
+
+### Backend (Railway)
+Per completare il deployment del backend su Railway:
+
+1. Vai su https://railway.app e accedi con GitHub
+2. Clicca "New Project" -> "Deploy from GitHub repo"
+3. Seleziona il repository `PINGER104/planner-molino`
+4. Railway rileverà automaticamente la cartella `backend`
+5. Aggiungi un database PostgreSQL:
+   - Clicca "New" -> "Database" -> "Add PostgreSQL"
+6. Configura le variabili d'ambiente nel servizio backend:
+   - `DATABASE_URL` - (viene auto-configurata se colleghi il DB)
+   - `JWT_SECRET` - una stringa segreta casuale
+   - `NODE_ENV` - `production`
+   - `CORS_ORIGIN` - `https://frontend-two-vert-37.vercel.app`
+   - `PORT` - `3001` (o lascia che Railway lo assegni)
+
+7. Dopo il deploy, copia l'URL del backend Railway (es: `https://planner-molino-xxx.up.railway.app`)
+
+8. Aggiorna la variabile d'ambiente su Vercel:
+   ```bash
+   vercel env rm REACT_APP_API_URL production
+   vercel env add REACT_APP_API_URL production
+   # Inserisci: https://TUO-URL-RAILWAY.up.railway.app/api
+   vercel deploy --prod
+   ```
+
+### Repository GitHub
+- **URL**: https://github.com/PINGER104/planner-molino
