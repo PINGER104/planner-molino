@@ -6,21 +6,15 @@ services:
     region: frankfurt
     rootDir: backend
     buildCommand: npm install && npm run build
-    startCommand: npm run migrate:seed && npm start
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: JWT_SECRET
-        generateValue: true
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 8h
       - key: CORS_ORIGIN
         sync: false
       - key: DATABASE_URL
-        fromDatabase:
-          name: planner-molino-db
-          property: connectionString
-
-databases:
-  - name: planner-molino-db
-    databaseName: planner_molino
-    region: frankfurt
-    plan: free
+        sync: false
