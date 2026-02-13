@@ -64,72 +64,105 @@ async function seed() {
     `);
     console.log('Cycle times configuration seeded successfully');
 
-    // Insert sample bookings
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfterTomorrow = new Date(today);
-    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+    // Look up actual IDs dynamically (avoids breakage if auto-increment doesn't start at 1)
+    const clientiResult = await pool.query(`SELECT id, codice FROM clienti ORDER BY codice`);
+    const trasportatoriResult = await pool.query(`SELECT id, codice FROM trasportatori ORDER BY codice`);
+    const utentiResult = await pool.query(`SELECT id, username FROM utenti WHERE username = 'admin' LIMIT 1`);
 
-    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+    const clienteId = (codice: string) => {
+      const row = clientiResult.rows.find((r: { codice: string }) => r.codice === codice);
+      return row ? row.id : null;
+    };
+    const traspId = (codice: string) => {
+      const row = trasportatoriResult.rows.find((r: { codice: string }) => r.codice === codice);
+      return row ? row.id : null;
+    };
+    const adminId = utentiResult.rows[0]?.id || null;
 
-    await pool.query(`
-      INSERT INTO prenotazioni (
-        codice_prenotazione, tipologia, cliente_id, trasportatore_id,
-        data_pianificata, ora_inizio_prevista, ora_fine_prevista, durata_prevista_minuti,
-        prodotto_codice, prodotto_descrizione, categoria_prodotto,
-        specifica_w, specifica_w_tolleranza, specifica_pl, specifica_pl_tolleranza,
-        quantita_prevista, unita_misura, quantita_kg,
-        stato, priorita, created_by
-      )
-      VALUES
-        ('PROD-2026-0001', 'produzione', 1, NULL, $1, '08:00', '09:30', 90,
-         'FAR001', 'Farina Tipo 00 W280', 'rinfusa',
-         280, 20, 0.55, 0.05, 10, 'ton', 10000,
-         'pianificato', 3, 1),
-        ('PROD-2026-0002', 'produzione', 2, NULL, $1, '10:00', '12:00', 120,
-         'FAR002', 'Farina Manitoba W380', 'confezionato_silos',
-         380, 15, 0.45, 0.03, 5, 'ton', 5000,
-         'preso_in_carico', 2, 1),
-        ('CONS-2026-0001', 'consegna', 1, 1, $2, '07:00', '08:00', 60,
-         'FAR001', 'Farina Tipo 00 W280', 'rinfusa',
-         280, 20, 0.55, 0.05, 5, 'ton', 5000,
-         'pianificato', 1, 1),
-        ('CONS-2026-0002', 'consegna', 3, 2, $2, '09:00', '10:30', 90,
-         'FAR003', 'Farina Integrale BIO', 'confezionato_sacco',
-         220, 25, 0.60, 0.05, 2, 'ton', 2000,
-         'pianificato', 4, 1),
-        ('PROD-2026-0003', 'produzione', 4, NULL, $3, '08:00', '10:00', 120,
-         'FAR004', 'Semola Rimacinata', 'confezionato_sacco',
-         NULL, NULL, NULL, NULL, 3, 'ton', 3000,
-         'pianificato', 5, 1)
-      ON CONFLICT (codice_prenotazione) DO NOTHING
-    `, [formatDate(today), formatDate(tomorrow), formatDate(dayAfterTomorrow)]);
-    console.log('Sample bookings seeded successfully');
+    if (!adminId) {
+      console.warn('WARNING: admin user not found, skipping prenotazioni seed');
+    } else {
+      // Insert sample bookings
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayAfterTomorrow = new Date(today);
+      dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
 
-    // Insert storico_stati for existing bookings
-    await pool.query(`
-      INSERT INTO storico_stati (prenotazione_id, stato_precedente, stato_nuovo, utente_id, note)
-      SELECT id, NULL, 'pianificato', 1, 'Prenotazione creata'
-      FROM prenotazioni
-      WHERE NOT EXISTS (
-        SELECT 1 FROM storico_stati WHERE storico_stati.prenotazione_id = prenotazioni.id
-      )
-    `);
+      const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
-    // Add state change for preso_in_carico booking
-    await pool.query(`
-      INSERT INTO storico_stati (prenotazione_id, stato_precedente, stato_nuovo, utente_id, note)
-      SELECT id, 'pianificato', 'preso_in_carico', 2, 'Presa in carico operatore'
-      FROM prenotazioni
-      WHERE codice_prenotazione = 'PROD-2026-0002'
-      AND NOT EXISTS (
-        SELECT 1 FROM storico_stati
-        WHERE storico_stati.prenotazione_id = prenotazioni.id
-        AND stato_nuovo = 'preso_in_carico'
-      )
-    `);
-    console.log('State history seeded successfully');
+      await pool.query(`
+        INSERT INTO prenotazioni (
+          codice_prenotazione, tipologia, cliente_id, trasportatore_id,
+          data_pianificata, ora_inizio_prevista, ora_fine_prevista, durata_prevista_minuti,
+          prodotto_codice, prodotto_descrizione, categoria_prodotto,
+          specifica_w, specifica_w_tolleranza, specifica_pl, specifica_pl_tolleranza,
+          quantita_prevista, unita_misura, quantita_kg,
+          stato, priorita, created_by
+        )
+        VALUES
+          ('PROD-2026-0001', 'produzione', $4, NULL, $1, '08:00', '09:30', 90,
+           'FAR001', 'Farina Tipo 00 W280', 'rinfusa',
+           280, 20, 0.55, 0.05, 10, 'ton', 10000,
+           'pianificato', 3, $7),
+          ('PROD-2026-0002', 'produzione', $5, NULL, $1, '10:00', '12:00', 120,
+           'FAR002', 'Farina Manitoba W380', 'confezionato_silos',
+           380, 15, 0.45, 0.03, 5, 'ton', 5000,
+           'preso_in_carico', 2, $7),
+          ('CONS-2026-0001', 'consegna', $4, $8, $2, '07:00', '08:00', 60,
+           'FAR001', 'Farina Tipo 00 W280', 'rinfusa',
+           280, 20, 0.55, 0.05, 5, 'ton', 5000,
+           'pianificato', 1, $7),
+          ('CONS-2026-0002', 'consegna', $6, $9, $2, '09:00', '10:30', 90,
+           'FAR003', 'Farina Integrale BIO', 'confezionato_sacco',
+           220, 25, 0.60, 0.05, 2, 'ton', 2000,
+           'pianificato', 4, $7),
+          ('PROD-2026-0003', 'produzione', $10, NULL, $3, '08:00', '10:00', 120,
+           'FAR004', 'Semola Rimacinata', 'confezionato_sacco',
+           NULL, NULL, NULL, NULL, 3, 'ton', 3000,
+           'pianificato', 5, $7)
+        ON CONFLICT (codice_prenotazione) DO NOTHING
+      `, [
+        formatDate(today),           // $1
+        formatDate(tomorrow),        // $2
+        formatDate(dayAfterTomorrow),// $3
+        clienteId('CLI001'),         // $4 - Panificio Da Mario
+        clienteId('CLI002'),         // $5 - Pastificio Artigiano
+        clienteId('CLI003'),         // $6 - Supermercati UniFood
+        adminId,                     // $7 - created_by
+        traspId('TRA001'),           // $8 - Trasporti Veloci
+        traspId('TRA002'),           // $9 - Logistica Nord
+        clienteId('CLI004'),         // $10 - Ristorante La Buona Tavola
+      ]);
+      console.log('Sample bookings seeded successfully');
+
+      // Insert storico_stati for existing bookings
+      await pool.query(`
+        INSERT INTO storico_stati (prenotazione_id, stato_precedente, stato_nuovo, utente_id, note)
+        SELECT id, NULL, 'pianificato', $1, 'Prenotazione creata'
+        FROM prenotazioni
+        WHERE NOT EXISTS (
+          SELECT 1 FROM storico_stati WHERE storico_stati.prenotazione_id = prenotazioni.id
+        )
+      `, [adminId]);
+
+      // Add state change for preso_in_carico booking
+      const opProdResult = await pool.query(`SELECT id FROM utenti WHERE username = 'operatore_prod' LIMIT 1`);
+      const opProdId = opProdResult.rows[0]?.id || adminId;
+
+      await pool.query(`
+        INSERT INTO storico_stati (prenotazione_id, stato_precedente, stato_nuovo, utente_id, note)
+        SELECT id, 'pianificato', 'preso_in_carico', $1, 'Presa in carico operatore'
+        FROM prenotazioni
+        WHERE codice_prenotazione = 'PROD-2026-0002'
+        AND NOT EXISTS (
+          SELECT 1 FROM storico_stati
+          WHERE storico_stati.prenotazione_id = prenotazioni.id
+          AND stato_nuovo = 'preso_in_carico'
+        )
+      `, [opProdId]);
+      console.log('State history seeded successfully');
+    }
 
     console.log('Database seeding completed successfully!');
   } catch (error) {
