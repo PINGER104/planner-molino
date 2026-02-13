@@ -27,7 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
-const DRAWER_WIDTH = 280;
+const DRAWER_WIDTH = 240;
 
 interface SidebarProps {
   open: boolean;

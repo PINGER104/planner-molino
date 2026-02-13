@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
@@ -288,14 +288,17 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-// Section Route wrapper (checks section access)
-const SectionRoute: React.FC<{
-  children: React.ReactNode;
-  section: 'produzione' | 'consegne';
-}> = ({ children, section }) => {
+// Section Route wrapper (checks section access via URL param)
+const SectionRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { hasSection } = useAuth();
+  const { section } = useParams<{ section: string }>();
 
-  if (!hasSection(section)) {
+  const validSections = ['produzione', 'consegne'];
+  if (!section || !validSections.includes(section)) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!hasSection(section as 'produzione' | 'consegne')) {
     return <Navigate to="/" replace />;
   }
 
@@ -324,129 +327,15 @@ const AppRoutes: React.FC = () => {
       >
         <Route index element={<Dashboard />} />
 
-        {/* Produzione routes */}
-        <Route
-          path="produzione/calendario"
-          element={
-            <SectionRoute section="produzione">
-              <Calendario />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="produzione/prenotazioni"
-          element={
-            <SectionRoute section="produzione">
-              <Prenotazioni />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="produzione/prenotazioni/nuova"
-          element={
-            <SectionRoute section="produzione">
-              <PrenotazioneForm />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="produzione/prenotazioni/:id"
-          element={
-            <SectionRoute section="produzione">
-              <PrenotazioneDettaglio />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="produzione/prenotazioni/:id/modifica"
-          element={
-            <SectionRoute section="produzione">
-              <PrenotazioneForm />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="produzione/clienti"
-          element={
-            <SectionRoute section="produzione">
-              <Clienti />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="produzione/trasportatori"
-          element={
-            <SectionRoute section="produzione">
-              <Trasportatori />
-            </SectionRoute>
-          }
-        />
-
-        {/* Consegne routes */}
-        <Route
-          path="consegne/calendario"
-          element={
-            <SectionRoute section="consegne">
-              <Calendario />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="consegne/prenotazioni"
-          element={
-            <SectionRoute section="consegne">
-              <Prenotazioni />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="consegne/prenotazioni/nuova"
-          element={
-            <SectionRoute section="consegne">
-              <PrenotazioneForm />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="consegne/prenotazioni/:id"
-          element={
-            <SectionRoute section="consegne">
-              <PrenotazioneDettaglio />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="consegne/prenotazioni/:id/modifica"
-          element={
-            <SectionRoute section="consegne">
-              <PrenotazioneForm />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="consegne/prenotazioni/:id/dati-carico"
-          element={
-            <SectionRoute section="consegne">
-              <DatiCaricoForm />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="consegne/clienti"
-          element={
-            <SectionRoute section="consegne">
-              <Clienti />
-            </SectionRoute>
-          }
-        />
-        <Route
-          path="consegne/trasportatori"
-          element={
-            <SectionRoute section="consegne">
-              <Trasportatori />
-            </SectionRoute>
-          }
-        />
+        {/* Section routes (produzione / consegne) */}
+        <Route path=":section/calendario" element={<SectionRoute><Calendario /></SectionRoute>} />
+        <Route path=":section/prenotazioni" element={<SectionRoute><Prenotazioni /></SectionRoute>} />
+        <Route path=":section/prenotazioni/nuova" element={<SectionRoute><PrenotazioneForm /></SectionRoute>} />
+        <Route path=":section/prenotazioni/:id" element={<SectionRoute><PrenotazioneDettaglio /></SectionRoute>} />
+        <Route path=":section/prenotazioni/:id/modifica" element={<SectionRoute><PrenotazioneForm /></SectionRoute>} />
+        <Route path=":section/prenotazioni/:id/dati-carico" element={<SectionRoute><DatiCaricoForm /></SectionRoute>} />
+        <Route path=":section/clienti" element={<SectionRoute><Clienti /></SectionRoute>} />
+        <Route path=":section/trasportatori" element={<SectionRoute><Trasportatori /></SectionRoute>} />
 
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

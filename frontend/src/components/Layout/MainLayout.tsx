@@ -4,7 +4,7 @@ import { Box, Toolbar } from '@mui/material';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
-const DRAWER_WIDTH = 280;
+const DRAWER_WIDTH = 240;
 
 const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);

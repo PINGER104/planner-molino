@@ -69,6 +69,6 @@ export function requireSezione(sezione: SezioneAbilitata) {
 
 export function generateToken(payload: JWTPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '8h',
-  });
+    expiresIn: (process.env.JWT_EXPIRES_IN || '8h') as string & jwt.SignOptions['expiresIn'],
+  } as jwt.SignOptions);
 }
