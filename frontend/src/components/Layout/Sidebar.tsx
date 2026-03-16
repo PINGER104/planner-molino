@@ -64,15 +64,23 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       sx={{
         width: open ? DRAWER_WIDTH : 0,
         flexShrink: 0,
+        transition: (theme: any) =>
+          theme.transitions.create('width', {
+            easing: theme.transitions.easing.easeInOut,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
         '& .MuiDrawer-paper': {
           width: DRAWER_WIDTH,
           boxSizing: 'border-box',
           top: 64,
           height: 'calc(100% - 64px)',
+          borderRight: '1px solid',
+          borderColor: 'divider',
+          overflowX: 'hidden',
         },
       }}
     >
-      <Box sx={{ overflow: 'auto', mt: 1 }}>
+      <Box sx={{ overflow: 'auto', mt: 1, px: 0.5 }}>
         {/* Planning Produzione */}
         {hasSection('produzione') && (
           <>

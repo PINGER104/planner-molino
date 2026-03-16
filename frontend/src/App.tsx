@@ -71,26 +71,34 @@ const theme = createTheme({
     divider: '#e2e8f0',
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"DM Sans", "Helvetica Neue", "Arial", sans-serif',
     h1: {
+      fontFamily: '"Plus Jakarta Sans", "DM Sans", sans-serif',
+      fontWeight: 800,
+      letterSpacing: '-0.025em',
+    },
+    h2: {
+      fontFamily: '"Plus Jakarta Sans", "DM Sans", sans-serif',
       fontWeight: 700,
       letterSpacing: '-0.02em',
     },
-    h2: {
+    h3: {
+      fontFamily: '"Plus Jakarta Sans", "DM Sans", sans-serif',
+      fontWeight: 700,
+      letterSpacing: '-0.015em',
+    },
+    h4: {
+      fontFamily: '"Plus Jakarta Sans", "DM Sans", sans-serif',
       fontWeight: 700,
       letterSpacing: '-0.01em',
     },
-    h3: {
-      fontWeight: 600,
-      letterSpacing: '-0.01em',
-    },
-    h4: {
-      fontWeight: 600,
-    },
     h5: {
+      fontFamily: '"Plus Jakarta Sans", "DM Sans", sans-serif',
       fontWeight: 600,
+      letterSpacing: '-0.005em',
     },
     h6: {
+      fontFamily: '"Plus Jakarta Sans", "DM Sans", sans-serif',
       fontWeight: 600,
     },
     subtitle1: {
@@ -98,16 +106,24 @@ const theme = createTheme({
     },
     subtitle2: {
       fontWeight: 500,
+      fontSize: '0.8125rem',
     },
     body1: {
       lineHeight: 1.6,
     },
     body2: {
       lineHeight: 1.5,
+      fontSize: '0.875rem',
     },
     button: {
       textTransform: 'none' as const,
       fontWeight: 600,
+      letterSpacing: '0.01em',
+    },
+    overline: {
+      fontWeight: 600,
+      letterSpacing: '0.08em',
+      fontSize: '0.6875rem',
     },
   },
   shape: {
@@ -146,15 +162,15 @@ const theme = createTheme({
         body: {
           scrollbarColor: '#cbd5e1 #f1f5f9',
           '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
-            width: 8,
-            height: 8,
+            width: 6,
+            height: 6,
           },
           '&::-webkit-scrollbar-track, & *::-webkit-scrollbar-track': {
-            background: '#f1f5f9',
+            background: 'transparent',
           },
           '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
             backgroundColor: '#cbd5e1',
-            borderRadius: 4,
+            borderRadius: 3,
           },
           '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
             backgroundColor: '#94a3b8',
@@ -168,22 +184,32 @@ const theme = createTheme({
           textTransform: 'none',
           fontWeight: 600,
           borderRadius: 8,
-          padding: '8px 16px',
+          padding: '8px 20px',
           boxShadow: 'none',
+          transition: 'all 0.2s ease',
           '&:hover': {
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            boxShadow: '0 2px 8px -2px rgb(0 0 0 / 0.12)',
+            transform: 'translateY(-1px)',
+          },
+          '&:active': {
+            transform: 'translateY(0)',
           },
         },
         contained: {
           '&:hover': {
-            boxShadow: '0 4px 12px -2px rgb(0 0 0 / 0.2)',
+            boxShadow: '0 4px 14px -3px rgb(0 0 0 / 0.2)',
           },
         },
         outlined: {
           borderWidth: 1.5,
           '&:hover': {
             borderWidth: 1.5,
+            backgroundColor: 'rgba(30, 64, 175, 0.04)',
           },
+        },
+        sizeSmall: {
+          padding: '4px 12px',
+          fontSize: '0.8125rem',
         },
       },
     },
@@ -192,19 +218,25 @@ const theme = createTheme({
         root: {
           backgroundImage: 'none',
         },
+        elevation0: {
+          border: '1px solid #e2e8f0',
+        },
         elevation1: {
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+          border: '1px solid #f1f5f9',
         },
         elevation2: {
-          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+          borderRadius: 14,
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.04)',
+          transition: 'all 0.2s ease',
         },
       },
     },
@@ -215,9 +247,14 @@ const theme = createTheme({
           backgroundColor: '#f8fafc',
           color: '#475569',
           borderBottom: '2px solid #e2e8f0',
+          fontSize: '0.8125rem',
+          textTransform: 'uppercase' as const,
+          letterSpacing: '0.04em',
+          padding: '14px 16px',
         },
         body: {
           borderBottom: '1px solid #f1f5f9',
+          padding: '12px 16px',
         },
       },
     },
@@ -226,6 +263,7 @@ const theme = createTheme({
         root: {
           fontWeight: 500,
           borderRadius: 6,
+          fontSize: '0.8125rem',
         },
       },
     },
@@ -234,6 +272,10 @@ const theme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             borderRadius: 8,
+            transition: 'box-shadow 0.2s ease',
+            '&.Mui-focused': {
+              boxShadow: '0 0 0 3px rgba(30, 64, 175, 0.1)',
+            },
           },
         },
       },
@@ -242,6 +284,7 @@ const theme = createTheme({
       styleOverrides: {
         paper: {
           borderRadius: 16,
+          boxShadow: '0 24px 48px -12px rgb(0 0 0 / 0.2)',
         },
       },
     },
@@ -249,17 +292,22 @@ const theme = createTheme({
       styleOverrides: {
         paper: {
           borderRight: 'none',
+          boxShadow: '1px 0 0 0 #e2e8f0',
         },
       },
     },
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
-          backgroundColor: '#1e293b',
+          backgroundColor: '#0f172a',
           fontSize: '0.75rem',
           fontWeight: 500,
           padding: '6px 12px',
           borderRadius: 6,
+          boxShadow: '0 4px 12px -2px rgb(0 0 0 / 0.3)',
+        },
+        arrow: {
+          color: '#0f172a',
         },
       },
     },
@@ -267,6 +315,22 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 10,
+          fontWeight: 500,
+        },
+      },
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          margin: '2px 8px',
+          padding: '8px 16px',
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(30, 64, 175, 0.08)',
+            '&:hover': {
+              backgroundColor: 'rgba(30, 64, 175, 0.12)',
+            },
+          },
         },
       },
     },
@@ -349,7 +413,7 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={it}>
-        <BrowserRouter basename="/planner-molino">
+        <BrowserRouter basename={process.env.PUBLIC_URL}>
           <AuthProvider>
             <AppRoutes />
           </AuthProvider>

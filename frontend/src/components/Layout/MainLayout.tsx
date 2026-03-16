@@ -4,8 +4,6 @@ import { Box, Toolbar } from '@mui/material';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
-const DRAWER_WIDTH = 240;
-
 const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -14,19 +12,19 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', overflow: 'hidden' }}>
       <Header onMenuToggle={handleMenuToggle} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Box
         component="main"
         sx={{
           flexGrow: 1,
+          minWidth: 0,
           p: 3,
-          ml: sidebarOpen ? 0 : `-${DRAWER_WIDTH}px`,
           transition: (theme) =>
-            theme.transitions.create('margin', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.leavingScreen,
+            theme.transitions.create(['margin', 'width'], {
+              easing: theme.transitions.easing.easeInOut,
+              duration: theme.transitions.duration.enteringScreen,
             }),
         }}
       >

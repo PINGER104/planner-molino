@@ -46,17 +46,32 @@ const Login: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: '#f5f5f5',
+        background: 'linear-gradient(135deg, #f0f4ff 0%, #e8ecf4 50%, #f8fafc 100%)',
+        px: 2,
       }}
     >
-      <Card sx={{ maxWidth: 400, width: '100%', mx: 2 }}>
+      <Card sx={{ maxWidth: 420, width: '100%', border: '1px solid #e2e8f0', boxShadow: '0 8px 32px -8px rgb(0 0 0 / 0.12)' }}>
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
-            <Factory sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-            <Typography variant="h5" component="h1" fontWeight="bold">
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: '16px',
+                bgcolor: 'primary.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 2.5,
+                boxShadow: '0 4px 14px -3px rgba(30, 64, 175, 0.4)',
+              }}
+            >
+              <Factory sx={{ fontSize: 32, color: 'white' }} />
+            </Box>
+            <Typography variant="h5" component="h1" sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 700 }}>
               PLANNER Molino 4.0
             </Typography>
-            <Typography variant="body2" color="textSecondary">
+            <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
               Sistema di pianificazione produzione e consegne
             </Typography>
           </Box>

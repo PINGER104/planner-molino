@@ -49,45 +49,85 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   };
 
   return (
-    <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+    <AppBar
+      position="fixed"
+      elevation={0}
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        backdropFilter: 'blur(8px)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+      }}
+    >
       <Toolbar>
         <IconButton
           color="inherit"
           aria-label="open drawer"
           edge="start"
           onClick={onMenuToggle}
-          sx={{ mr: 2 }}
+          sx={{
+            mr: 2,
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+          }}
         >
           <MenuIcon />
         </IconButton>
 
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+        <Typography
+          variant="h6"
+          noWrap
+          component="div"
+          sx={{
+            flexGrow: 1,
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+            fontSize: '1.1rem',
+          }}
+        >
           PLANNER Molino 4.0
         </Typography>
 
         {user && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Chip
-              label={canModify ? 'Modifica' : 'Visualizzazione'}
+              label={canModify ? 'Modifica' : 'Sola Lettura'}
               color={canModify ? 'success' : 'default'}
               size="small"
               variant="outlined"
-              sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.5)' }}
+              sx={{
+                color: 'white',
+                borderColor: 'rgba(255,255,255,0.35)',
+                fontSize: '0.75rem',
+                height: 26,
+                '& .MuiChip-label': { px: 1.5 },
+              }}
             />
 
+            <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.15)', mx: 0.5 }} />
+
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="body2" sx={{ mr: 1 }}>
+              <Typography variant="body2" sx={{ mr: 1, fontWeight: 500, opacity: 0.9 }}>
                 {user.nome} {user.cognome}
               </Typography>
               <IconButton
-                size="large"
+                size="small"
                 aria-label="account menu"
                 aria-controls="menu-appbar"
                 aria-haspopup="true"
                 onClick={handleMenu}
                 color="inherit"
+                sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
               >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
+                <Avatar
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    bgcolor: 'rgba(255,255,255,0.15)',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    border: '2px solid rgba(255,255,255,0.25)',
+                  }}
+                >
                   {user.nome.charAt(0)}
                   {user.cognome.charAt(0)}
                 </Avatar>

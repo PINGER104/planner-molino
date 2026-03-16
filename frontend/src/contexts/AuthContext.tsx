@@ -44,14 +44,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+      if (!mounted) return;
       setSession(initialSession);
       if (initialSession?.user) {
         const profile = await fetchProfile(initialSession.user.id);
-        setUser(profile);
+        if (mounted) setUser(profile);
       }
-      setIsLoading(false);
+      if (mounted) setIsLoading(false);
+    }).catch(() => {
+      if (mounted) setIsLoading(false);
     });
 
     // Listen for auth state changes
@@ -67,7 +71,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {

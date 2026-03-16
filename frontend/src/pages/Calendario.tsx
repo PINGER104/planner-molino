@@ -160,9 +160,11 @@ const Calendario: React.FC = () => {
 
   // Calendar navigation handlers
   const handleDatesSet = (arg: { startStr: string; endStr: string; view: { type: string } }) => {
-    setCurrentDateRange({
-      start: arg.startStr.split('T')[0],
-      end: arg.endStr.split('T')[0],
+    const newStart = arg.startStr.split('T')[0];
+    const newEnd = arg.endStr.split('T')[0];
+    setCurrentDateRange((prev) => {
+      if (prev.start === newStart && prev.end === newEnd) return prev;
+      return { start: newStart, end: newEnd };
     });
     setCurrentView(arg.view.type as CalendarView);
   };
@@ -326,7 +328,7 @@ const Calendario: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)', gap: 0 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 112px)', gap: 0 }}>
       {/* ========== PAGE HEADER ========== */}
       <Paper
         elevation={0}
@@ -740,11 +742,11 @@ const Calendario: React.FC = () => {
               },
             }}
           >
-            {loading && events.length === 0 ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            {loading && events.length === 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', inset: 0, zIndex: 10, bgcolor: 'rgba(255,255,255,0.8)' }}>
                 <LoadingSpinner />
               </Box>
-            ) : (
+            )}
               <FullCalendar
                 ref={(ref) => setCalendarRef(ref)}
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -841,7 +843,6 @@ const Calendario: React.FC = () => {
                   month: 'short',
                 }}
               />
-            )}
           </Box>
         </Paper>
       </Box>
