@@ -54,22 +54,13 @@ const Login: React.FC = () => {
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
             <Box
-              sx={{
-                width: 64,
-                height: 64,
-                borderRadius: '16px',
-                bgcolor: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mb: 2.5,
-                boxShadow: '0 4px 14px -3px rgba(30, 64, 175, 0.4)',
-              }}
-            >
-              <Factory sx={{ fontSize: 32, color: 'white' }} />
-            </Box>
+              component="img"
+              src={`${process.env.PUBLIC_URL}/logo-molino.png`}
+              alt="Molino 4.0"
+              sx={{ height: 52, width: 'auto', mb: 1.5 }}
+            />
             <Typography variant="h5" component="h1" sx={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 700 }}>
-              PLANNER Molino 4.0
+              PLANNER
             </Typography>
             <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
               Sistema di pianificazione produzione e consegne

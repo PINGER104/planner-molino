@@ -72,21 +72,40 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           <MenuIcon />
         </IconButton>
 
-        <Typography
-          variant="h6"
-          noWrap
+        <Box
           onClick={() => navigate('/')}
           sx={{
             flexGrow: 1,
-            fontFamily: '"Plus Jakarta Sans", sans-serif',
-            fontWeight: 700,
-            letterSpacing: '-0.02em',
-            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
             cursor: 'pointer',
           }}
         >
-          PLANNER Molino 4.0
-        </Typography>
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontFamily: '"Plus Jakarta Sans", sans-serif',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              fontSize: '1.1rem',
+            }}
+          >
+            PLANNER
+          </Typography>
+          <Box
+            component="img"
+            src={`${process.env.PUBLIC_URL}/logo-molino.png`}
+            alt="Molino 4.0"
+            sx={{
+              height: 32,
+              width: 'auto',
+              filter: 'brightness(0) invert(1)',
+              opacity: 0.95,
+            }}
+          />
+        </Box>
 
         {user && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
