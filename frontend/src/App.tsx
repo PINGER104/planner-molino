@@ -18,6 +18,7 @@ import PrenotazioneForm from './pages/PrenotazioneForm';
 import Clienti from './pages/Clienti';
 import Trasportatori from './pages/Trasportatori';
 import DatiCaricoForm from './pages/DatiCaricoForm';
+import TempiCiclo from './pages/TempiCiclo';
 
 const theme = createTheme({
   palette: {
@@ -390,6 +391,9 @@ const AppRoutes: React.FC = () => {
         }
       >
         <Route index element={<Dashboard />} />
+
+        {/* Impostazioni routes */}
+        <Route path="impostazioni/tempi-ciclo" element={<TempiCiclo />} />
 
         {/* Section routes (produzione / consegne) */}
         <Route path=":section/calendario" element={<SectionRoute><Calendario /></SectionRoute>} />

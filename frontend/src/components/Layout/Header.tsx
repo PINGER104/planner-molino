@@ -75,13 +75,14 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         <Typography
           variant="h6"
           noWrap
-          component="div"
+          onClick={() => navigate('/')}
           sx={{
             flexGrow: 1,
             fontFamily: '"Plus Jakarta Sans", sans-serif',
             fontWeight: 700,
             letterSpacing: '-0.02em',
             fontSize: '1.1rem',
+            cursor: 'pointer',
           }}
         >
           PLANNER Molino 4.0

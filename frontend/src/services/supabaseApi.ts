@@ -423,6 +423,29 @@ export const configurazioneApi = {
     return data;
   },
 
+  createTempiCiclo: async (data: {
+    categoria: string;
+    ton_ora: number;
+    tempo_setup_minuti: number;
+    tempo_pulizia_minuti: number;
+  }) => {
+    const { data: result, error } = await supabase
+      .from('configurazione_tempi_ciclo')
+      .insert(data)
+      .select()
+      .single();
+    if (error) throw error;
+    return result;
+  },
+
+  deleteTempiCiclo: async (categoria: string) => {
+    const { error } = await supabase
+      .from('configurazione_tempi_ciclo')
+      .delete()
+      .eq('categoria', categoria);
+    if (error) throw error;
+  },
+
   updateTempiCiclo: async (categoria: string, updates: Record<string, unknown>) => {
     const { data, error } = await supabase
       .from('configurazione_tempi_ciclo')
