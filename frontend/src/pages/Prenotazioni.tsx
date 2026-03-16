@@ -34,7 +34,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale/it';
 
-import { prenotazioniApi } from '../services/api';
+import { prenotazioniApi } from '../services/supabaseApi';
 import { useAuth } from '../contexts/AuthContext';
 import { Prenotazione, TipologiaPrenotazione, PaginatedResponse } from '../types';
 import { StatoBadge, LoadingSpinner, ConfirmDialog } from '../components/common';
@@ -61,14 +61,14 @@ const Prenotazioni: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await prenotazioniApi.getAll({
+      const result = await prenotazioniApi.getAll({
         tipologia,
         page: page + 1,
         limit: rowsPerPage,
         search: search || undefined,
         stato: statoFilter || undefined,
       });
-      setData(response.data.data);
+      setData(result);
     } catch (err) {
       setError('Errore nel caricamento delle prenotazioni');
       console.error(err);
@@ -89,8 +89,8 @@ const Prenotazioni: React.FC = () => {
       setSelectedId(null);
       loadData();
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Errore nella cancellazione');
+      const error = err as { message?: string };
+      setError(error.message || 'Errore nella cancellazione');
     }
   };
 

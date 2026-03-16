@@ -349,7 +349,7 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={it}>
-        <BrowserRouter>
+        <BrowserRouter basename="/planner-molino">
           <AuthProvider>
             <AppRoutes />
           </AuthProvider>

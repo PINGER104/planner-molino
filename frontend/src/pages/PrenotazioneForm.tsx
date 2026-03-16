@@ -21,7 +21,7 @@ import {
 import { ArrowBack, Save } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 
-import { prenotazioniApi, clientiApi, trasportatoriApi, configurazioneApi } from '../services/api';
+import { prenotazioniApi, clientiApi, trasportatoriApi, configurazioneApi } from '../services/supabaseApi';
 import {
   PrenotazioneForm as FormData,
   ClienteDropdown,
@@ -80,12 +80,12 @@ const PrenotazioneFormPage: React.FC = () => {
   useEffect(() => {
     const loadDropdowns = async () => {
       try {
-        const [clientiRes, trasportatoriRes] = await Promise.all([
+        const [clientiData, trasportatoriData] = await Promise.all([
           clientiApi.getDropdown(),
           trasportatoriApi.getDropdown(),
         ]);
-        setClienti(clientiRes.data.data);
-        setTrasportatori(trasportatoriRes.data.data);
+        setClienti(clientiData);
+        setTrasportatori(trasportatoriData);
       } catch (err) {
         console.error('Error loading dropdowns:', err);
       }
@@ -98,8 +98,7 @@ const PrenotazioneFormPage: React.FC = () => {
     if (isEdit && id) {
       const loadPrenotazione = async () => {
         try {
-          const response = await prenotazioniApi.getById(parseInt(id));
-          const data: Prenotazione = response.data.data;
+          const data: Prenotazione = await prenotazioniApi.getById(parseInt(id));
           reset({
             tipologia: data.tipologia,
             cliente_id: data.cliente_id || undefined,
@@ -143,8 +142,8 @@ const PrenotazioneFormPage: React.FC = () => {
           categoria_prodotto: categoriaProdotto,
           quantita_kg: quantitaKg,
         })
-        .then((res) => {
-          setCalcoloDurata(res.data.data.durata_minuti);
+        .then((durata) => {
+          setCalcoloDurata(durata);
         })
         .catch(() => {
           setCalcoloDurata(null);
@@ -185,8 +184,8 @@ const PrenotazioneFormPage: React.FC = () => {
       }
       navigate(`/${section}/prenotazioni`);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Errore nel salvataggio');
+      const error = err as { message?: string };
+      setError(error.message || 'Errore nel salvataggio');
     } finally {
       setSaving(false);
     }

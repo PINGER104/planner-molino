@@ -16,8 +16,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, hasSection } = useAuth();
-  const [username, setUsername] = useState('');
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,12 +29,11 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login(username, password);
-      // Redirect to appropriate section based on user permissions
+      await login(email, password);
       navigate('/');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Errore durante il login');
+      const error = err as { message?: string };
+      setError(error.message || 'Credenziali non valide');
     } finally {
       setLoading(false);
     }
@@ -71,11 +70,12 @@ const Login: React.FC = () => {
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth
-              label="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               margin="normal"
-              autoComplete="username"
+              autoComplete="email"
               autoFocus
               required
             />

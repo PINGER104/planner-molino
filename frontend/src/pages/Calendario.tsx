@@ -67,7 +67,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { format, parseISO, addDays } from 'date-fns';
 import { it } from 'date-fns/locale/it';
 
-import { prenotazioniApi } from '../services/api';
+import { prenotazioniApi } from '../services/supabaseApi';
 import { useAuth } from '../contexts/AuthContext';
 import { CalendarEvent, Prenotazione, TipologiaPrenotazione } from '../types';
 import { LoadingSpinner } from '../components/common';
@@ -136,13 +136,13 @@ const Calendario: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await prenotazioniApi.getCalendario({
+      const calendarEvents = await prenotazioniApi.getCalendario({
         tipologia,
         data_da: start,
         data_a: end,
       });
-      setEvents(response.data.data);
-      const prenotazioni = response.data.data.map((e: CalendarEvent) => e.extendedProps);
+      setEvents(calendarEvents);
+      const prenotazioni = calendarEvents.map((e: CalendarEvent) => e.extendedProps);
       setAllPrenotazioni(prenotazioni);
     } catch (err) {
       setError('Errore nel caricamento delle prenotazioni');
@@ -222,9 +222,9 @@ const Calendario: React.FC = () => {
       if (currentDateRange.start && currentDateRange.end) {
         loadEvents(currentDateRange.start, currentDateRange.end);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       info.revert();
-      const errorMessage = err?.response?.data?.error || 'Errore nello spostamento della prenotazione';
+      const errorMessage = (err as { message?: string })?.message || 'Errore nello spostamento della prenotazione';
       setSnackbar({
         open: true,
         message: errorMessage,

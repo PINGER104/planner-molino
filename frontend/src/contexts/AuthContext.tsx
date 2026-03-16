@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, SezioneAbilitata } from '../types';
-import { authApi } from '../services/api';
+import { supabase } from '../lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   canModify: boolean;
   hasSection: (section: SezioneAbilitata) => boolean;
@@ -27,38 +28,70 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+async function fetchProfile(userId: string): Promise<User | null> {
+  const { data, error } = await supabase
+    .from('utenti')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  if (error || !data) return null;
+  return data as User;
+}
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    // Get initial session
+    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+      setSession(initialSession);
+      if (initialSession?.user) {
+        const profile = await fetchProfile(initialSession.user.id);
+        setUser(profile);
+      }
+      setIsLoading(false);
+    });
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, newSession) => {
+        setSession(newSession);
+        if (newSession?.user) {
+          const profile = await fetchProfile(newSession.user.id);
+          setUser(profile);
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    // Profile will be loaded by onAuthStateChange listener,
+    // but we also set it here for immediate UI response
+    if (data.user) {
+      const profile = await fetchProfile(data.user.id);
+      setUser(profile);
+
+      // Update last access
+      await supabase
+        .from('utenti')
+        .update({ ultimo_accesso: new Date().toISOString() })
+        .eq('id', data.user.id);
     }
-    setIsLoading(false);
   }, []);
 
-  const login = useCallback(async (username: string, password: string) => {
-    const response = await authApi.login(username, password);
-    const { token: newToken, user: newUser } = response.data.data;
-
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
-
-    setToken(newToken);
-    setUser(newUser);
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
   }, []);
 
   const canModify = user?.livello_accesso === 'modifica';
@@ -72,8 +105,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     user,
-    token,
-    isAuthenticated: !!token && !!user,
+    session,
+    isAuthenticated: !!session && !!user,
     isLoading,
     login,
     logout,

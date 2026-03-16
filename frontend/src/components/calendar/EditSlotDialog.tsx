@@ -24,7 +24,7 @@ import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import { format, parseISO } from 'date-fns';
 
 import { Prenotazione } from '../../types';
-import { prenotazioniApi } from '../../services/api';
+import { prenotazioniApi } from '../../services/supabaseApi';
 import {
   COLORI_STATO,
   LABEL_STATO,
@@ -98,8 +98,8 @@ const EditSlotDialog: React.FC<EditSlotDialogProps> = ({
         onSuccess();
         onClose();
       }, 800);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.error || 'Errore durante il salvataggio';
+    } catch (err: unknown) {
+      const errorMessage = (err as { message?: string })?.message || 'Errore durante il salvataggio';
       setError(errorMessage);
     } finally {
       setLoading(false);

@@ -40,7 +40,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale/it';
 
-import { prenotazioniApi } from '../services/api';
+import { prenotazioniApi } from '../services/supabaseApi';
 import { useAuth } from '../contexts/AuthContext';
 import { Prenotazione, TipologiaPrenotazione } from '../types';
 import { StatoBadge, LoadingSpinner } from '../components/common';
@@ -69,8 +69,8 @@ const PrenotazioneDettaglio: React.FC = () => {
     if (!id) return;
     setLoading(true);
     try {
-      const response = await prenotazioniApi.getById(parseInt(id));
-      setPrenotazione(response.data.data);
+      const data = await prenotazioniApi.getById(parseInt(id));
+      setPrenotazione(data);
     } catch (err) {
       setError('Errore nel caricamento della prenotazione');
     } finally {
@@ -93,8 +93,8 @@ const PrenotazioneDettaglio: React.FC = () => {
       setStatoNote('');
       loadData();
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Errore nel cambio stato');
+      const error = err as { message?: string };
+      setError(error.message || 'Errore nel cambio stato');
     } finally {
       setUpdating(false);
     }

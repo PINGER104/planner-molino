@@ -19,7 +19,7 @@ import {
 import { ArrowBack, Save } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 
-import { prenotazioniApi } from '../services/api';
+import { prenotazioniApi } from '../services/supabaseApi';
 import { DatiCaricoForm as FormData, Prenotazione } from '../types';
 import { LoadingSpinner } from '../components/common';
 import { LABEL_TIPOLOGIA_CARICO } from '../utils/statiConfig';
@@ -52,10 +52,10 @@ const DatiCaricoFormPage: React.FC = () => {
     if (id) {
       const loadPrenotazione = async () => {
         try {
-          const response = await prenotazioniApi.getById(parseInt(id));
-          setPrenotazione(response.data.data);
+          const data = await prenotazioniApi.getById(parseInt(id));
+          setPrenotazione(data);
 
-          if (response.data.data.stato !== 'in_carico') {
+          if (data.stato !== 'in_carico') {
             setError('I dati carico possono essere registrati solo quando lo stato e "In carico"');
           }
         } catch (err) {
@@ -77,8 +77,8 @@ const DatiCaricoFormPage: React.FC = () => {
       await prenotazioniApi.createDatiCarico(parseInt(id), data);
       navigate(`/${section}/prenotazioni/${id}`);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Errore nel salvataggio');
+      const error = err as { message?: string };
+      setError(error.message || 'Errore nel salvataggio');
     } finally {
       setSaving(false);
     }

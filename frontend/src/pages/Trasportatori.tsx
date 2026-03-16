@@ -31,7 +31,7 @@ import {
 } from '@mui/material';
 import { Add, Search, Edit, Delete, Clear, Star } from '@mui/icons-material';
 
-import { trasportatoriApi } from '../services/api';
+import { trasportatoriApi } from '../services/supabaseApi';
 import { useAuth } from '../contexts/AuthContext';
 import { Trasportatore, PaginatedResponse } from '../types';
 import { LoadingSpinner, ConfirmDialog } from '../components/common';
@@ -72,13 +72,12 @@ const Trasportatori: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await trasportatoriApi.getAll({
+      const result = await trasportatoriApi.getAll({
         page: page + 1,
         limit: rowsPerPage,
         search: search || undefined,
-        attivo: 'true',
       });
-      setData(response.data.data);
+      setData(result);
     } catch (err) {
       setError('Errore nel caricamento dei trasportatori');
     } finally {
@@ -98,8 +97,8 @@ const Trasportatori: React.FC = () => {
       setSelectedId(null);
       loadData();
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Errore nella cancellazione');
+      const error = err as { message?: string };
+      setError(error.message || 'Errore nella cancellazione');
     }
   };
 
@@ -154,8 +153,8 @@ const Trasportatori: React.FC = () => {
       setFormDialogOpen(false);
       loadData();
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Errore nel salvataggio');
+      const error = err as { message?: string };
+      setError(error.message || 'Errore nel salvataggio');
     } finally {
       setSaving(false);
     }

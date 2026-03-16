@@ -31,7 +31,7 @@ import {
 } from '@mui/material';
 import { Add, Search, Edit, Delete, Clear, Visibility } from '@mui/icons-material';
 
-import { clientiApi } from '../services/api';
+import { clientiApi } from '../services/supabaseApi';
 import { useAuth } from '../contexts/AuthContext';
 import { Cliente, PaginatedResponse } from '../types';
 import { LoadingSpinner, ConfirmDialog } from '../components/common';
@@ -72,13 +72,12 @@ const Clienti: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await clientiApi.getAll({
+      const result = await clientiApi.getAll({
         page: page + 1,
         limit: rowsPerPage,
         search: search || undefined,
-        attivo: 'true',
       });
-      setData(response.data.data);
+      setData(result);
     } catch (err) {
       setError('Errore nel caricamento dei clienti');
     } finally {
@@ -98,8 +97,8 @@ const Clienti: React.FC = () => {
       setSelectedId(null);
       loadData();
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Errore nella cancellazione');
+      const error = err as { message?: string };
+      setError(error.message || 'Errore nella cancellazione');
     }
   };
 
@@ -156,8 +155,8 @@ const Clienti: React.FC = () => {
       setFormDialogOpen(false);
       loadData();
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || 'Errore nel salvataggio');
+      const error = err as { message?: string };
+      setError(error.message || 'Errore nel salvataggio');
     } finally {
       setSaving(false);
     }

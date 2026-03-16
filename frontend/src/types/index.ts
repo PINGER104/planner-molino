@@ -30,7 +30,7 @@ export type StatoPrenotazione = StatoProduzione | StatoConsegna;
 
 // User
 export interface User {
-  id: number;
+  id: string; // UUID from Supabase Auth
   username: string;
   nome: string;
   cognome: string;
@@ -128,7 +128,7 @@ export interface Prenotazione {
   stato: StatoPrenotazione;
   priorita: number;
   note: string | null;
-  created_by: number | null;
+  created_by: string | null; // UUID
   created_at: string;
   updated_at: string;
   // Joined fields
@@ -153,7 +153,7 @@ export interface StoricoStato {
   stato_precedente: string | null;
   stato_nuovo: string;
   timestamp_cambio: string;
-  utente_id: number | null;
+  utente_id: string | null; // UUID
   note: string | null;
   utente_nome?: string;
   utente_cognome?: string;
@@ -166,7 +166,7 @@ export interface DatiCarico {
   data_carico: string;
   ora_inizio_carico: string | null;
   ora_fine_carico: string | null;
-  operatore_id: number | null;
+  operatore_id: string | null; // UUID
   operatore_nome: string | null;
   idoneita_trasporto: boolean;
   idoneita_note: string | null;
@@ -214,7 +214,7 @@ export interface CalendarEvent {
 
 // Form types
 export interface LoginForm {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -224,6 +224,8 @@ export interface PrenotazioneForm {
   trasportatore_id?: number;
   data_pianificata: string;
   ora_inizio_prevista: string;
+  ora_fine_prevista?: string;
+  durata_prevista_minuti?: number;
   prodotto_codice?: string;
   prodotto_descrizione?: string;
   categoria_prodotto?: CategoriaProdotto;
