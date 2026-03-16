@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -53,11 +53,27 @@ const Prenotazioni: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statoFilter, setStatoFilter] = useState<string>('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Debounce search: wait 400ms after last keystroke before querying
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const loadData = useCallback(async () => {
+    // Cancel any in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setError(null);
     try {
@@ -65,20 +81,27 @@ const Prenotazioni: React.FC = () => {
         tipologia,
         page: page + 1,
         limit: rowsPerPage,
-        search: search || undefined,
+        search: debouncedSearch || undefined,
         stato: statoFilter || undefined,
       });
-      setData(result);
+      if (!controller.signal.aborted) {
+        setData(result);
+      }
     } catch (err) {
-      setError('Errore nel caricamento delle prenotazioni');
-      console.error(err);
+      if (!controller.signal.aborted) {
+        setError('Errore nel caricamento delle prenotazioni');
+        console.error(err);
+      }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
-  }, [tipologia, page, rowsPerPage, search, statoFilter]);
+  }, [tipologia, page, rowsPerPage, debouncedSearch, statoFilter]);
 
   useEffect(() => {
     loadData();
+    return () => { abortRef.current?.abort(); };
   }, [loadData]);
 
   const handleDelete = async () => {

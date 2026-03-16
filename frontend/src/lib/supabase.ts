@@ -12,4 +12,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     // Bypass Web Locks API to avoid 5s delay from React StrictMode orphaned locks
     lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
   },
+  global: {
+    // Abort requests that take longer than 15 seconds to prevent infinite loading
+    fetch: (url, options = {}) => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      return fetch(url, {
+        ...options,
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeout));
+    },
+  },
 });

@@ -65,6 +65,15 @@ export const authApi = {
 
 // ─── Prenotazioni ────────────────────────────────────
 
+// Columns needed for list views (avoids fetching 40+ unused columns)
+const LIST_COLUMNS = [
+  'id', 'codice_prenotazione', 'tipologia', 'stato',
+  'data_pianificata', 'ora_inizio_prevista', 'ora_fine_prevista',
+  'prodotto_descrizione', 'quantita_prevista', 'unita_misura',
+  'cliente_id', 'cliente_ragione_sociale', 'cliente_codice',
+  'trasportatore_ragione_sociale', 'priorita',
+].join(',');
+
 export const prenotazioniApi = {
   getAll: async (params?: {
     page?: number;
@@ -84,7 +93,7 @@ export const prenotazioniApi = {
 
     let query = supabase
       .from('prenotazioni_view')
-      .select('*', { count: 'exact' });
+      .select(LIST_COLUMNS, { count: 'estimated' });
 
     if (params?.tipologia) query = query.eq('tipologia', params.tipologia);
     if (params?.stato) query = query.eq('stato', params.stato);
@@ -107,7 +116,7 @@ export const prenotazioniApi = {
 
     const total = count ?? 0;
     return {
-      data: data as Prenotazione[],
+      data: (data ?? []) as unknown as Prenotazione[],
       total,
       page,
       limit,
@@ -120,9 +129,11 @@ export const prenotazioniApi = {
     data_da: string;
     data_a: string;
   }): Promise<CalendarEvent[]> => {
+    // Only fetch columns needed for calendar rendering
+    const calendarColumns = 'id,codice_prenotazione,tipologia,stato,data_pianificata,ora_inizio_prevista,ora_fine_prevista,prodotto_descrizione,quantita_prevista,unita_misura,cliente_ragione_sociale,trasportatore_ragione_sociale,priorita,note';
     let query = supabase
       .from('prenotazioni_view')
-      .select('*')
+      .select(calendarColumns)
       .gte('data_pianificata', params.data_da)
       .lte('data_pianificata', params.data_a);
 
@@ -134,7 +145,7 @@ export const prenotazioniApi = {
 
     if (error) throw error;
 
-    return (data as Prenotazione[]).map((row) => ({
+    return ((data ?? []) as unknown as Prenotazione[]).map((row) => ({
       id: row.id.toString(),
       title: `${row.cliente_ragione_sociale || 'N/D'} - ${row.prodotto_descrizione || 'N/D'}`,
       start: `${row.data_pianificata}T${row.ora_inizio_prevista}`,
@@ -263,7 +274,7 @@ export const clientiApi = {
 
     let query = supabase
       .from('clienti')
-      .select('*', { count: 'exact' });
+      .select('id,codice,ragione_sociale,partita_iva,citta,provincia,telefono,email,attivo', { count: 'estimated' });
 
     if (params?.search) {
       query = query.or(
@@ -278,7 +289,7 @@ export const clientiApi = {
     if (error) throw error;
 
     return {
-      data: data as Cliente[],
+      data: (data ?? []) as unknown as Cliente[],
       total: count ?? 0,
       page,
       limit,
@@ -293,7 +304,7 @@ export const clientiApi = {
       .eq('id', id)
       .single();
     if (error) throw error;
-    return data as Cliente;
+    return data as unknown as Cliente;
   },
 
   getDropdown: async (): Promise<ClienteDropdown[]> => {
@@ -303,7 +314,7 @@ export const clientiApi = {
       .eq('attivo', true)
       .order('ragione_sociale');
     if (error) throw error;
-    return data as ClienteDropdown[];
+    return (data ?? []) as unknown as ClienteDropdown[];
   },
 
   create: async (data: Record<string, unknown>) => {
@@ -342,7 +353,7 @@ export const trasportatoriApi = {
 
     let query = supabase
       .from('trasportatori')
-      .select('*', { count: 'exact' });
+      .select('id,codice,ragione_sociale,partita_iva,referente_nome,referente_telefono,tipologie_mezzi,attivo', { count: 'estimated' });
 
     if (params?.search) {
       query = query.or(
@@ -357,7 +368,7 @@ export const trasportatoriApi = {
     if (error) throw error;
 
     return {
-      data: data as Trasportatore[],
+      data: (data ?? []) as unknown as Trasportatore[],
       total: count ?? 0,
       page,
       limit,
@@ -372,7 +383,7 @@ export const trasportatoriApi = {
       .eq('id', id)
       .single();
     if (error) throw error;
-    return data as Trasportatore;
+    return data as unknown as Trasportatore;
   },
 
   getDropdown: async (): Promise<TrasportatoreDropdown[]> => {
@@ -382,7 +393,7 @@ export const trasportatoriApi = {
       .eq('attivo', true)
       .order('ragione_sociale');
     if (error) throw error;
-    return data as TrasportatoreDropdown[];
+    return (data ?? []) as unknown as TrasportatoreDropdown[];
   },
 
   create: async (data: Record<string, unknown>) => {

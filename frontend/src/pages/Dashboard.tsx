@@ -118,30 +118,36 @@ function usePullToRefresh(onRefresh: () => Promise<void>) {
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(0);
   const pulling = useRef(false);
+  // Use refs to avoid re-attaching event listeners on every state change
+  const pullDistanceRef = useRef(0);
+  const refreshingRef = useRef(false);
+  const onRefreshRef = useRef(onRefresh);
+  onRefreshRef.current = onRefresh;
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     const onTouchStart = (e: TouchEvent) => {
-      if (el.scrollTop <= 0 && !refreshing) {
+      if (el.scrollTop <= 0 && !refreshingRef.current) {
         startY.current = e.touches[0].clientY;
         pulling.current = true;
       }
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!pulling.current || refreshing) return;
+      if (!pulling.current || refreshingRef.current) return;
       const deltaY = e.touches[0].clientY - startY.current;
       if (deltaY > 0) {
-        // Dampen the pull — feels more natural
         const dampened = Math.min(deltaY * 0.45, 140);
+        pullDistanceRef.current = dampened;
         setPullDistance(dampened);
         if (dampened > 10) {
           e.preventDefault();
         }
       } else {
         pulling.current = false;
+        pullDistanceRef.current = 0;
         setPullDistance(0);
       }
     };
@@ -150,16 +156,20 @@ function usePullToRefresh(onRefresh: () => Promise<void>) {
       if (!pulling.current) return;
       pulling.current = false;
 
-      if (pullDistance >= PULL_THRESHOLD) {
+      if (pullDistanceRef.current >= PULL_THRESHOLD) {
+        refreshingRef.current = true;
         setRefreshing(true);
         setPullDistance(PULL_THRESHOLD);
         try {
-          await onRefresh();
+          await onRefreshRef.current();
         } finally {
+          refreshingRef.current = false;
           setRefreshing(false);
+          pullDistanceRef.current = 0;
           setPullDistance(0);
         }
       } else {
+        pullDistanceRef.current = 0;
         setPullDistance(0);
       }
     };
@@ -173,7 +183,7 @@ function usePullToRefresh(onRefresh: () => Promise<void>) {
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
     };
-  }, [pullDistance, refreshing, onRefresh]);
+  }, []); // Attach once — use refs for mutable values
 
   return { containerRef, pullDistance, refreshing };
 }
