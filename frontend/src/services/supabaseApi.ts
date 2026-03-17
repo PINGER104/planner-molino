@@ -14,6 +14,20 @@ import type {
   TrasportatoreDropdown,
 } from '../types';
 
+// Removes undefined values from an object to prevent Supabase from overwriting
+// existing data with nulls (undefined → null conversion).
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as Partial<T>;
+}
+
+// Sanitizes search input by removing PostgREST special characters
+// that could break .or() filter queries.
+function sanitizeSearch(search: string): string {
+  return search.replace(/[,.()"\\]/g, '');
+}
+
 // ─── Auth ────────────────────────────────────────────
 
 export const authApi = {
@@ -102,8 +116,9 @@ export const prenotazioniApi = {
     if (params?.data_da) query = query.gte('data_pianificata', params.data_da);
     if (params?.data_a) query = query.lte('data_pianificata', params.data_a);
     if (params?.search) {
+      const s = sanitizeSearch(params.search);
       query = query.or(
-        `codice_prenotazione.ilike.%${params.search}%,prodotto_descrizione.ilike.%${params.search}%,cliente_ragione_sociale.ilike.%${params.search}%`
+        `codice_prenotazione.ilike.%${s}%,prodotto_descrizione.ilike.%${s}%,cliente_ragione_sociale.ilike.%${s}%`
       );
     }
 
@@ -202,9 +217,12 @@ export const prenotazioniApi = {
   },
 
   update: async (id: number, data: Partial<PrenotazioneFormData>) => {
+    // Strip undefined values to avoid overwriting existing data with nulls,
+    // and remove fields that should not be updated directly.
+    const { tipologia: _, ...rest } = stripUndefined(data);
     const { data: result, error } = await supabase
       .from('prenotazioni')
-      .update({ ...data, updated_at: new Date().toISOString() })
+      .update(rest)
       .eq('id', id)
       .select()
       .single();
@@ -277,8 +295,9 @@ export const clientiApi = {
       .select('id,codice,ragione_sociale,partita_iva,citta,provincia,telefono,email,attivo', { count: 'estimated' });
 
     if (params?.search) {
+      const s = sanitizeSearch(params.search);
       query = query.or(
-        `codice.ilike.%${params.search}%,ragione_sociale.ilike.%${params.search}%,citta.ilike.%${params.search}%`
+        `codice.ilike.%${s}%,ragione_sociale.ilike.%${s}%,citta.ilike.%${s}%`
       );
     }
 
@@ -356,8 +375,9 @@ export const trasportatoriApi = {
       .select('id,codice,ragione_sociale,partita_iva,referente_nome,referente_telefono,tipologie_mezzi,attivo', { count: 'estimated' });
 
     if (params?.search) {
+      const s = sanitizeSearch(params.search);
       query = query.or(
-        `codice.ilike.%${params.search}%,ragione_sociale.ilike.%${params.search}%`
+        `codice.ilike.%${s}%,ragione_sociale.ilike.%${s}%`
       );
     }
 

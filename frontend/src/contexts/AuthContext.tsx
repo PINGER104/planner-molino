@@ -77,10 +77,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(s);
 
       if (s?.user) {
-        // Unlock loading immediately so the page renders while profile loads
-        setIsLoading(false);
         const profile = await fetchProfile(s.user.id);
-        if (mounted) setUser(profile);
+        if (mounted) {
+          setUser(profile);
+          setIsLoading(false);
+        }
       } else {
         setIsLoading(false);
       }

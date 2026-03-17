@@ -9,7 +9,6 @@ import {
   MenuItem,
   Avatar,
   Divider,
-  Chip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -108,20 +107,6 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
         {user && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Chip
-              label={canModify ? 'Modifica' : 'Sola Lettura'}
-              color={canModify ? 'success' : 'default'}
-              size="small"
-              variant="outlined"
-              sx={{
-                color: 'white',
-                borderColor: 'rgba(255,255,255,0.35)',
-                fontSize: '0.75rem',
-                height: 26,
-                '& .MuiChip-label': { px: 1.5 },
-              }}
-            />
-
             <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.15)', mx: 0.5 }} />
 
             <Box sx={{ display: 'flex', alignItems: 'center' }}>

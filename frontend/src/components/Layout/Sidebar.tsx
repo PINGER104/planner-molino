@@ -48,6 +48,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
     location.pathname.startsWith('/impostazioni')
   );
 
+  // Auto-expand the section matching the current route
+  React.useEffect(() => {
+    if (location.pathname.startsWith('/produzione')) setProduzioneOpen(true);
+    if (location.pathname.startsWith('/consegne')) setConsegneOpen(true);
+    if (location.pathname.startsWith('/impostazioni')) setImpostazioniOpen(true);
+  }, [location.pathname]);
+
   const handleNavigate = (path: string) => {
     navigate(path);
     onClose();

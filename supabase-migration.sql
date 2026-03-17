@@ -279,6 +279,10 @@ CREATE POLICY "dati_carico_update" ON dati_carico FOR UPDATE TO authenticated
 CREATE POLICY "config_select" ON configurazione_tempi_ciclo FOR SELECT TO authenticated USING (true);
 CREATE POLICY "config_update" ON configurazione_tempi_ciclo FOR UPDATE TO authenticated
     USING ((SELECT livello_accesso FROM utenti WHERE id = auth.uid()) = 'modifica');
+CREATE POLICY "config_insert" ON configurazione_tempi_ciclo FOR INSERT TO authenticated
+    WITH CHECK ((SELECT livello_accesso FROM utenti WHERE id = auth.uid()) = 'modifica');
+CREATE POLICY "config_delete" ON configurazione_tempi_ciclo FOR DELETE TO authenticated
+    USING ((SELECT livello_accesso FROM utenti WHERE id = auth.uid()) = 'modifica');
 
 -- ============================================
 -- 5. VIEWS

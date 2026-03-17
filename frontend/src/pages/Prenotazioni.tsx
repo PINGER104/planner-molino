@@ -259,7 +259,7 @@ const Prenotazioni: React.FC = () => {
                             <Visibility />
                           </IconButton>
                         </Tooltip>
-                        {canModify && row.stato === 'pianificato' && (
+                        {canModify && !['completato', 'partito', 'annullato'].includes(row.stato) && (
                           <>
                             <Tooltip title="Modifica">
                               <IconButton
