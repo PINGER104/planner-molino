@@ -5,7 +5,7 @@ services:
     region: frankfurt
     rootDir: backend
     buildCommand: npm install && npm run build
-    startCommand: npm run migrate:seed && npm start
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,4 +16,8 @@ services:
       - key: JWT_EXPIRES_IN
         value: 8h
       - key: CORS_ORIGIN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false

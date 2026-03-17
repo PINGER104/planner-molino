@@ -3,6 +3,9 @@ import type { User, PaginatedResponse } from '../types';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
+// Timeout for backend API calls (20s — accounts for Render cold starts)
+const API_TIMEOUT = 20000;
+
 async function getAuthHeaders(): Promise<HeadersInit> {
   const {
     data: { session },
@@ -22,6 +25,19 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return body.data as T;
 }
 
+function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT);
+  return fetch(url, { ...options, signal: controller.signal })
+    .catch((err) => {
+      if (err.name === 'AbortError') {
+        throw new Error('Il server non risponde. Riprova tra qualche secondo.');
+      }
+      throw err;
+    })
+    .finally(() => clearTimeout(timeout));
+}
+
 export const utentiAdminApi = {
   getAll: async (params?: {
     page?: number;
@@ -33,7 +49,7 @@ export const utentiAdminApi = {
     if (params?.page) qs.set('page', String(params.page));
     if (params?.limit) qs.set('limit', String(params.limit));
     if (params?.search) qs.set('search', params.search);
-    const res = await fetch(`${BASE_URL}/utenti?${qs}`, { headers });
+    const res = await fetchWithTimeout(`${BASE_URL}/utenti?${qs}`, { headers });
     return handleResponse<PaginatedResponse<User>>(res);
   },
 
@@ -48,7 +64,7 @@ export const utentiAdminApi = {
     sezioni_abilitate: string[];
   }): Promise<User> => {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${BASE_URL}/utenti`, {
+    const res = await fetchWithTimeout(`${BASE_URL}/utenti`, {
       method: 'POST',
       headers,
       body: JSON.stringify(data),
@@ -61,7 +77,7 @@ export const utentiAdminApi = {
     data: Record<string, unknown>
   ): Promise<User> => {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${BASE_URL}/utenti/${id}`, {
+    const res = await fetchWithTimeout(`${BASE_URL}/utenti/${id}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify(data),
@@ -74,7 +90,7 @@ export const utentiAdminApi = {
     newPassword: string
   ): Promise<void> => {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${BASE_URL}/utenti/${id}/reset-password`, {
+    const res = await fetchWithTimeout(`${BASE_URL}/utenti/${id}/reset-password`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ newPassword }),
@@ -84,7 +100,7 @@ export const utentiAdminApi = {
 
   delete: async (id: string): Promise<void> => {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${BASE_URL}/utenti/${id}`, {
+    const res = await fetchWithTimeout(`${BASE_URL}/utenti/${id}`, {
       method: 'DELETE',
       headers,
     });

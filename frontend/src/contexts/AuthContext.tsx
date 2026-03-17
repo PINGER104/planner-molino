@@ -29,13 +29,21 @@ interface AuthProviderProps {
 }
 
 async function fetchProfile(userId: string): Promise<User | null> {
-  const { data, error } = await supabase
-    .from('utenti')
-    .select('*')
-    .eq('id', userId)
-    .single();
-  if (error || !data) return null;
-  return data as User;
+  try {
+    const { data, error } = await supabase
+      .from('utenti')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    if (error || !data) {
+      console.warn('fetchProfile failed:', error?.message || 'No profile found');
+      return null;
+    }
+    return data as User;
+  } catch (err) {
+    console.warn('fetchProfile exception:', err);
+    return null;
+  }
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
@@ -62,18 +70,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    // Get initial session — set session immediately (sync), then fetch profile
+    // Get initial session — unlock loading ASAP, then fetch profile in background
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       if (!mounted) return;
       initialDone = true;
-      // Set session immediately so ProtectedRoute can render the layout
-      // while the profile is still loading in the background
       setSession(s);
+
       if (s?.user) {
+        // Unlock loading immediately so the page renders while profile loads
+        setIsLoading(false);
         const profile = await fetchProfile(s.user.id);
         if (mounted) setUser(profile);
+      } else {
+        setIsLoading(false);
       }
-      if (mounted) setIsLoading(false);
     }).catch(() => {
       initialDone = true;
       if (mounted) setIsLoading(false);
@@ -118,10 +128,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     [user]
   );
 
+  // Allow access with just a valid session — profile loads in background.
+  // This means pages render faster; features that depend on user profile
+  // (canModify, hasSection) will update once the profile arrives.
   const value: AuthContextType = {
     user,
     session,
-    isAuthenticated: !!session && !!user,
+    isAuthenticated: !!session,
     isLoading,
     login,
     logout,

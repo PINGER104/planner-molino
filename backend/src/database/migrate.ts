@@ -3,18 +3,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Idempotent migration: only creates tables/indexes if they don't already exist.
+// NEVER drops tables — production data must be preserved across deploys.
 const migrationSQL = `
--- Drop existing tables in reverse order of dependencies
-DROP TABLE IF EXISTS dati_carico CASCADE;
-DROP TABLE IF EXISTS storico_stati CASCADE;
-DROP TABLE IF EXISTS prenotazioni CASCADE;
-DROP TABLE IF EXISTS configurazione_tempi_ciclo CASCADE;
-DROP TABLE IF EXISTS clienti CASCADE;
-DROP TABLE IF EXISTS trasportatori CASCADE;
-DROP TABLE IF EXISTS utenti CASCADE;
-
 -- Utenti
-CREATE TABLE utenti (
+CREATE TABLE IF NOT EXISTS utenti (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -31,7 +24,7 @@ CREATE TABLE utenti (
 );
 
 -- Trasportatori
-CREATE TABLE trasportatori (
+CREATE TABLE IF NOT EXISTS trasportatori (
     id SERIAL PRIMARY KEY,
     codice VARCHAR(20) UNIQUE NOT NULL,
     ragione_sociale VARCHAR(200) NOT NULL,
@@ -50,7 +43,7 @@ CREATE TABLE trasportatori (
 );
 
 -- Clienti
-CREATE TABLE clienti (
+CREATE TABLE IF NOT EXISTS clienti (
     id SERIAL PRIMARY KEY,
     codice VARCHAR(20) UNIQUE NOT NULL,
     ragione_sociale VARCHAR(200) NOT NULL,
@@ -80,7 +73,7 @@ CREATE TABLE clienti (
 );
 
 -- Prenotazioni (tabella principale)
-CREATE TABLE prenotazioni (
+CREATE TABLE IF NOT EXISTS prenotazioni (
     id SERIAL PRIMARY KEY,
     codice_prenotazione VARCHAR(30) UNIQUE NOT NULL,
     tipologia VARCHAR(15) CHECK (tipologia IN ('produzione', 'consegna')),
@@ -140,7 +133,7 @@ CREATE TABLE prenotazioni (
 );
 
 -- Storico stati
-CREATE TABLE storico_stati (
+CREATE TABLE IF NOT EXISTS storico_stati (
     id SERIAL PRIMARY KEY,
     prenotazione_id INTEGER REFERENCES prenotazioni(id) ON DELETE CASCADE,
     stato_precedente VARCHAR(20),
@@ -151,7 +144,7 @@ CREATE TABLE storico_stati (
 );
 
 -- Dati carico (registrazione completamento)
-CREATE TABLE dati_carico (
+CREATE TABLE IF NOT EXISTS dati_carico (
     id SERIAL PRIMARY KEY,
     prenotazione_id INTEGER UNIQUE REFERENCES prenotazioni(id) ON DELETE CASCADE,
 
@@ -194,7 +187,7 @@ CREATE TABLE dati_carico (
 );
 
 -- Configurazione tempi ciclo
-CREATE TABLE configurazione_tempi_ciclo (
+CREATE TABLE IF NOT EXISTS configurazione_tempi_ciclo (
     id SERIAL PRIMARY KEY,
     categoria VARCHAR(30) UNIQUE NOT NULL,
     ton_ora DECIMAL(6,2) NOT NULL,
@@ -204,19 +197,19 @@ CREATE TABLE configurazione_tempi_ciclo (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Indici per performance
-CREATE INDEX idx_prenotazioni_data ON prenotazioni(data_pianificata);
-CREATE INDEX idx_prenotazioni_tipologia ON prenotazioni(tipologia);
-CREATE INDEX idx_prenotazioni_stato ON prenotazioni(stato);
-CREATE INDEX idx_prenotazioni_cliente ON prenotazioni(cliente_id);
-CREATE INDEX idx_storico_prenotazione ON storico_stati(prenotazione_id);
-CREATE INDEX idx_utenti_username ON utenti(username);
-CREATE INDEX idx_clienti_codice ON clienti(codice);
-CREATE INDEX idx_trasportatori_codice ON trasportatori(codice);
+-- Indexes (IF NOT EXISTS requires PostgreSQL 9.5+)
+CREATE INDEX IF NOT EXISTS idx_prenotazioni_data ON prenotazioni(data_pianificata);
+CREATE INDEX IF NOT EXISTS idx_prenotazioni_tipologia ON prenotazioni(tipologia);
+CREATE INDEX IF NOT EXISTS idx_prenotazioni_stato ON prenotazioni(stato);
+CREATE INDEX IF NOT EXISTS idx_prenotazioni_cliente ON prenotazioni(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_storico_prenotazione ON storico_stati(prenotazione_id);
+CREATE INDEX IF NOT EXISTS idx_utenti_username ON utenti(username);
+CREATE INDEX IF NOT EXISTS idx_clienti_codice ON clienti(codice);
+CREATE INDEX IF NOT EXISTS idx_trasportatori_codice ON trasportatori(codice);
 `;
 
 async function migrate() {
-  console.log('Starting database migration...');
+  console.log('Starting database migration (idempotent)...');
 
   try {
     await pool.query(migrationSQL);

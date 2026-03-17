@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Paper,
@@ -84,8 +84,19 @@ const GestioneUtenti: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search input (400ms) to avoid firing API on every keystroke
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(debounceRef.current);
+  }, [search]);
 
   // Form dialog state
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -113,7 +124,7 @@ const GestioneUtenti: React.FC = () => {
       const result = await utentiAdminApi.getAll({
         page: page + 1,
         limit: rowsPerPage,
-        search: search || undefined,
+        search: debouncedSearch || undefined,
       });
       setData(result);
     } catch (err: unknown) {
@@ -122,7 +133,7 @@ const GestioneUtenti: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, search]);
+  }, [page, rowsPerPage, debouncedSearch]);
 
   useEffect(() => {
     loadData();

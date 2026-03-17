@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, Box, CircularProgress } from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline, Box, CircularProgress, Typography } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { it } from 'date-fns/locale/it';
@@ -353,7 +353,12 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return null;
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 2 }}>
+        <CircularProgress size={36} />
+        <Typography variant="body2" color="text.secondary">Caricamento...</Typography>
+      </Box>
+    );
   }
 
   if (!isAuthenticated) {
@@ -365,7 +370,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 // Section Route wrapper (checks section access via URL param)
 const SectionRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { hasSection } = useAuth();
+  const { hasSection, user } = useAuth();
   const { section } = useParams<{ section: string }>();
 
   const validSections = ['produzione', 'consegne'];
@@ -373,7 +378,9 @@ const SectionRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     return <Navigate to="/" replace />;
   }
 
-  if (!hasSection(section as 'produzione' | 'consegne')) {
+  // While the user profile is still loading, render children optimistically.
+  // Once the profile arrives, hasSection will re-evaluate and redirect if needed.
+  if (user && !hasSection(section as 'produzione' | 'consegne')) {
     return <Navigate to="/" replace />;
   }
 
