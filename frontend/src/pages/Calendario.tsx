@@ -8,8 +8,6 @@ import {
   Drawer,
   IconButton,
   Divider,
-  List,
-  ListItem,
   ListItemText,
   ListItemIcon,
   Chip,
@@ -20,7 +18,6 @@ import {
   Tooltip,
   useTheme,
   useMediaQuery,
-  Badge,
   Avatar,
   Card,
   CardContent,
@@ -46,7 +43,6 @@ import {
   Menu as MenuIcon,
   MoreVert,
   Print,
-  TableChart,
   Event,
   AccessTime,
   Person,
@@ -55,10 +51,6 @@ import {
   Schedule,
   CheckCircle,
   PlayArrow,
-  PendingActions,
-  Cancel,
-  Share,
-  FilterList,
 } from '@mui/icons-material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -320,12 +312,6 @@ const Calendario: React.FC = () => {
       return '';
     }
   }, [currentDateRange, currentView]);
-
-  const viewLabels: Record<CalendarView, string> = {
-    dayGridMonth: 'Mese',
-    timeGridWeek: 'Settimana',
-    timeGridDay: 'Giorno',
-  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 112px)', gap: 0 }}>

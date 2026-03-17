@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -17,7 +16,6 @@ import {
   IconButton,
   Tooltip,
   Alert,
-  Stack,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -29,7 +27,7 @@ import {
   MenuItem,
   Chip,
 } from '@mui/material';
-import { Add, Search, Edit, Delete, Clear, Visibility } from '@mui/icons-material';
+import { Add, Search, Edit, Delete, Clear } from '@mui/icons-material';
 
 import { clientiApi } from '../services/supabaseApi';
 import { useAuth } from '../contexts/AuthContext';
@@ -38,7 +36,6 @@ import { LoadingSpinner, ConfirmDialog } from '../components/common';
 import { LABEL_CANALE, LABEL_MODALITA_CONSEGNA } from '../utils/statiConfig';
 
 const Clienti: React.FC = () => {
-  const navigate = useNavigate();
   const { canModify } = useAuth();
 
   const [data, setData] = useState<PaginatedResponse<Cliente> | null>(null);

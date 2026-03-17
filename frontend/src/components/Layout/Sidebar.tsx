@@ -10,7 +10,6 @@ import {
   Collapse,
   Divider,
   Box,
-  Typography,
 } from '@mui/material';
 import {
   ExpandLess,

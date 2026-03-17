@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  AccountCircle,
   Logout,
   Settings,
 } from '@mui/icons-material';

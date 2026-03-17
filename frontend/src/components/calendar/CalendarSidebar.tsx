@@ -2,14 +2,10 @@ import React, { useMemo } from 'react';
 import {
   Box,
   Typography,
-  Paper,
-  Divider,
   List,
   ListItem,
   ListItemText,
-  ListItemIcon,
   Chip,
-  Avatar,
   Card,
   CardContent,
   LinearProgress,
@@ -18,14 +14,12 @@ import {
   TrendingUp,
   Schedule,
   CheckCircle,
-  Cancel,
   PlayArrow,
   AccessTime,
   CalendarToday,
   FiberManualRecord,
 } from '@mui/icons-material';
-import { format, parseISO, isToday, isTomorrow } from 'date-fns';
-import { it } from 'date-fns/locale/it';
+import { parseISO, isToday, isTomorrow } from 'date-fns';
 
 import MiniCalendar from './MiniCalendar';
 import { Prenotazione, TipologiaPrenotazione } from '../../types';

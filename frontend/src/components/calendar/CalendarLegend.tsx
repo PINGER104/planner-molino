@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Paper, Chip, Divider } from '@mui/material';
-import { Circle, FiberManualRecord } from '@mui/icons-material';
+import { FiberManualRecord } from '@mui/icons-material';
 
 import { COLORI_STATO, COLORI_CATEGORIA, LABEL_STATO, LABEL_CATEGORIA } from '../../utils/statiConfig';
 import { TipologiaPrenotazione } from '../../types';

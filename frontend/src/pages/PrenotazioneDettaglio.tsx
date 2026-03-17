@@ -7,9 +7,6 @@ import {
   Button,
   Grid,
   Divider,
-  List,
-  ListItem,
-  ListItemText,
   Alert,
   Stack,
   Card,
@@ -42,13 +39,12 @@ import { it } from 'date-fns/locale/it';
 
 import { prenotazioniApi } from '../services/supabaseApi';
 import { useAuth } from '../contexts/AuthContext';
-import { Prenotazione, TipologiaPrenotazione } from '../types';
+import { Prenotazione } from '../types';
 import { StatoBadge, LoadingSpinner } from '../components/common';
 import {
   LABEL_STATO,
   LABEL_CATEGORIA,
   LABEL_UNITA,
-  LABEL_TIPOLOGIA_CARICO,
   COLORI_STATO,
 } from '../utils/statiConfig';
 

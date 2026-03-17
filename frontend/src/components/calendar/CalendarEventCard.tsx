@@ -6,7 +6,7 @@ import {
   LocalShipping,
   Inventory2,
 } from '@mui/icons-material';
-import { format, parseISO } from 'date-fns';
+// date-fns not needed here — formatting done at parent level
 import { Prenotazione } from '../../types';
 import {
   COLORI_STATO,

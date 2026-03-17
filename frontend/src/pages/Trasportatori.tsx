@@ -29,7 +29,7 @@ import {
   MenuItem,
   OutlinedInput,
 } from '@mui/material';
-import { Add, Search, Edit, Delete, Clear, Star } from '@mui/icons-material';
+import { Add, Search, Edit, Delete, Clear } from '@mui/icons-material';
 
 import { trasportatoriApi } from '../services/supabaseApi';
 import { useAuth } from '../contexts/AuthContext';
