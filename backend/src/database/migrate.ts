@@ -209,13 +209,33 @@ CREATE INDEX IF NOT EXISTS idx_trasportatori_codice ON trasportatori(codice);
 `;
 
 async function migrate() {
+  const dbUrl = process.env.DATABASE_URL;
   console.log('Starting database migration (idempotent)...');
+  console.log('DATABASE_URL set:', !!dbUrl);
+  if (dbUrl) {
+    // Log host/port without exposing credentials
+    try {
+      const url = new URL(dbUrl);
+      console.log(`DB host: ${url.hostname}, port: ${url.port || 5432}, database: ${url.pathname.slice(1)}`);
+    } catch {
+      console.log('DATABASE_URL is not a valid URL format');
+    }
+  }
+  console.log('NODE_ENV:', process.env.NODE_ENV);
 
   try {
+    // Test basic connectivity first
+    console.log('Testing database connection...');
+    await pool.query('SELECT 1');
+    console.log('Database connection OK, running migrations...');
+
     await pool.query(migrationSQL);
     console.log('Migration completed successfully!');
-  } catch (error) {
-    console.error('Migration failed:', error);
+  } catch (error: unknown) {
+    const err = error as { message?: string; code?: string; errno?: string };
+    console.error('Migration failed:', err.message);
+    console.error('Error code:', err.code);
+    if (err.errno) console.error('Errno:', err.errno);
     throw error;
   } finally {
     await pool.end();
