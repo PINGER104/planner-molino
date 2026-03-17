@@ -68,9 +68,20 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 // Start server only when not running on Vercel (serverless)
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  // Verify database connectivity before accepting requests
+  import('./config/database').then(async ({ query }) => {
+    try {
+      await query('SELECT 1');
+      console.log('Database connection verified');
+    } catch (err) {
+      console.error('FATAL: Cannot connect to database:', err);
+      process.exit(1);
+    }
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
   });
 }
 
