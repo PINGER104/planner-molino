@@ -21,6 +21,7 @@ const Clienti = React.lazy(() => import('./pages/Clienti'));
 const Trasportatori = React.lazy(() => import('./pages/Trasportatori'));
 const DatiCaricoForm = React.lazy(() => import('./pages/DatiCaricoForm'));
 const TempiCiclo = React.lazy(() => import('./pages/TempiCiclo'));
+const GestioneUtenti = React.lazy(() => import('./pages/GestioneUtenti'));
 
 // Lightweight fallback shown while a lazy chunk downloads
 const PageLoader = () => (
@@ -403,6 +404,7 @@ const AppRoutes: React.FC = () => {
           <Route index element={<Dashboard />} />
 
           {/* Impostazioni routes */}
+          <Route path="impostazioni/utenti" element={<GestioneUtenti />} />
           <Route path="impostazioni/tempi-ciclo" element={<TempiCiclo />} />
 
           {/* Section routes (produzione / consegne) */}

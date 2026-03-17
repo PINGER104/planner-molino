@@ -7,21 +7,21 @@ import {
   resetPassword,
   deleteUtente,
 } from '../controllers/utentiController';
-import { authenticateToken, requireModifica } from '../middleware/auth';
+import { authenticateSupabaseToken, requireModificaSupabase } from '../middleware/supabaseAuth';
 
 const router = Router();
 
-// All routes require authentication
-router.use(authenticateToken);
+// All routes require Supabase JWT authentication
+router.use(authenticateSupabaseToken);
 
 // Read routes (available to all authenticated users)
 router.get('/', getUtenti);
 router.get('/:id', getUtente);
 
 // Write routes (require modifica permission)
-router.post('/', requireModifica, createUtente);
-router.put('/:id', requireModifica, updateUtente);
-router.post('/:id/reset-password', requireModifica, resetPassword);
-router.delete('/:id', requireModifica, deleteUtente);
+router.post('/', requireModificaSupabase, createUtente);
+router.put('/:id', requireModificaSupabase, updateUtente);
+router.post('/:id/reset-password', requireModificaSupabase, resetPassword);
+router.delete('/:id', requireModificaSupabase, deleteUtente);
 
 export default router;
