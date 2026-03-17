@@ -45,31 +45,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+    let initialDone = false;
+
+    // Attach listener BEFORE getSession to avoid race conditions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, newSession) => {
+        // Skip duplicate processing during initial load
+        if (!initialDone) return;
+        setSession(newSession);
+        if (newSession?.user) {
+          const profile = await fetchProfile(newSession.user.id);
+          if (mounted) setUser(profile);
+        } else {
+          if (mounted) setUser(null);
+        }
+      }
+    );
+
+    // Get initial session — set session immediately (sync), then fetch profile
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       if (!mounted) return;
-      setSession(initialSession);
-      if (initialSession?.user) {
-        const profile = await fetchProfile(initialSession.user.id);
+      initialDone = true;
+      // Set session immediately so ProtectedRoute can render the layout
+      // while the profile is still loading in the background
+      setSession(s);
+      if (s?.user) {
+        const profile = await fetchProfile(s.user.id);
         if (mounted) setUser(profile);
       }
       if (mounted) setIsLoading(false);
     }).catch(() => {
+      initialDone = true;
       if (mounted) setIsLoading(false);
     });
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
-        setSession(newSession);
-        if (newSession?.user) {
-          const profile = await fetchProfile(newSession.user.id);
-          setUser(profile);
-        } else {
-          setUser(null);
-        }
-      }
-    );
 
     return () => {
       mounted = false;
@@ -81,17 +89,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
 
-    // Profile will be loaded by onAuthStateChange listener,
-    // but we also set it here for immediate UI response
+    // Set profile immediately for instant UI response
     if (data.user) {
       const profile = await fetchProfile(data.user.id);
       setUser(profile);
 
-      // Update last access
-      await supabase
+      // Update last access in background (fire-and-forget, non-blocking)
+      supabase
         .from('utenti')
         .update({ ultimo_accesso: new Date().toISOString() })
-        .eq('id', data.user.id);
+        .eq('id', data.user.id)
+        .then(() => {});
     }
   }, []);
 

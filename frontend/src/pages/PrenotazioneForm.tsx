@@ -134,20 +134,23 @@ const PrenotazioneFormPage: React.FC = () => {
     }
   }, [isEdit, id, reset]);
 
-  // Calculate duration when product/quantity changes
+  // Calculate duration when product/quantity changes (debounced to avoid RPC spam)
   useEffect(() => {
     if (categoriaProdotto && quantitaKg) {
-      configurazioneApi
-        .calcolaDurata({
-          categoria_prodotto: categoriaProdotto,
-          quantita_kg: quantitaKg,
-        })
-        .then((durata) => {
-          setCalcoloDurata(durata);
-        })
-        .catch(() => {
-          setCalcoloDurata(null);
-        });
+      const timer = setTimeout(() => {
+        configurazioneApi
+          .calcolaDurata({
+            categoria_prodotto: categoriaProdotto,
+            quantita_kg: quantitaKg,
+          })
+          .then((durata) => {
+            setCalcoloDurata(durata);
+          })
+          .catch(() => {
+            setCalcoloDurata(null);
+          });
+      }, 500);
+      return () => clearTimeout(timer);
     } else {
       setCalcoloDurata(null);
     }
