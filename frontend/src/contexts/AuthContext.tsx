@@ -70,6 +70,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
+    // Safety timeout: never block loading for more than 8 seconds.
+    // If Supabase is unreachable, let the user through to the login page.
+    const safetyTimer = setTimeout(() => {
+      if (mounted && isLoading) {
+        initialDone = true;
+        setIsLoading(false);
+      }
+    }, 8000);
+
     // Get initial session — unlock loading ASAP, then fetch profile in background
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       if (!mounted) return;
@@ -77,10 +86,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(s);
 
       if (s?.user) {
+        // Unlock loading immediately with the session, fetch profile in background
+        setIsLoading(false);
         const profile = await fetchProfile(s.user.id);
         if (mounted) {
           setUser(profile);
-          setIsLoading(false);
         }
       } else {
         setIsLoading(false);
@@ -92,6 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);

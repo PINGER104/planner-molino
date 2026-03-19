@@ -57,7 +57,6 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
 
   const handleNavigate = (path: string) => {
     navigate(path);
-    onClose();
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -102,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
                 {produzioneOpen ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
-            <Collapse in={produzioneOpen} timeout="auto" unmountOnExit>
+            <Collapse in={produzioneOpen} timeout="auto">
               <List component="div" disablePadding>
                 <ListItemButton
                   sx={{ pl: 4 }}
@@ -165,7 +164,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
                 {consegneOpen ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
-            <Collapse in={consegneOpen} timeout="auto" unmountOnExit>
+            <Collapse in={consegneOpen} timeout="auto">
               <List component="div" disablePadding>
                 <ListItemButton
                   sx={{ pl: 4 }}
@@ -228,7 +227,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
                 {impostazioniOpen ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
-            <Collapse in={impostazioniOpen} timeout="auto" unmountOnExit>
+            <Collapse in={impostazioniOpen} timeout="auto">
               <List component="div" disablePadding>
                 <ListItemButton
                   sx={{ pl: 4 }}

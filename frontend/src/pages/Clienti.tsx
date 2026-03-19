@@ -44,6 +44,7 @@ const Clienti: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -65,6 +66,15 @@ const Clienti: React.FC = () => {
     note: '',
   });
 
+  // Debounce search: wait 400ms after last keystroke before querying
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -72,7 +82,7 @@ const Clienti: React.FC = () => {
       const result = await clientiApi.getAll({
         page: page + 1,
         limit: rowsPerPage,
-        search: search || undefined,
+        search: debouncedSearch || undefined,
       });
       setData(result);
     } catch (err) {
@@ -80,7 +90,7 @@ const Clienti: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, search]);
+  }, [page, rowsPerPage, debouncedSearch]);
 
   useEffect(() => {
     loadData();
