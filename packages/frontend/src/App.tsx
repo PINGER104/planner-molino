@@ -7,8 +7,9 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { it } from 'date-fns/locale';
 import theme from './theme/theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import MainLayout from './components/layout/MainLayout';
 
-// Lazy loaded pages (populated in later tasks)
+// Lazy loaded pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 
 // Placeholder for pages not yet implemented
@@ -42,10 +43,35 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Suspense fallback={<LoadingFallback />}><LoginPage /></Suspense>} />
-      <Route path="/dashboard" element={<PrivateRoute><PlaceholderPage /></PrivateRoute>} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Login - outside MainLayout */}
+      <Route
+        path="/login"
+        element={
+          user ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Suspense fallback={<LoadingFallback />}>
+              <LoginPage />
+            </Suspense>
+          )
+        }
+      />
+
+      {/* Private routes - inside MainLayout */}
+      <Route
+        element={
+          <PrivateRoute>
+            <MainLayout />
+          </PrivateRoute>
+        }
+      >
+        <Route path="/dashboard" element={<PlaceholderPage />} />
+        <Route path="/produzione/*" element={<PlaceholderPage />} />
+        <Route path="/consegne/*" element={<PlaceholderPage />} />
+        <Route path="/impostazioni/*" element={<PlaceholderPage />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Route>
     </Routes>
   );
 }
