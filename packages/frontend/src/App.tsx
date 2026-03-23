@@ -14,6 +14,9 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const ClientiPage = lazy(() => import('./pages/ClientiPage'));
 const TrasportatoriPage = lazy(() => import('./pages/TrasportatoriPage'));
+const PrenotazioniListPage = lazy(() => import('./pages/PrenotazioniListPage'));
+const PrenotazioneFormPage = lazy(() => import('./pages/PrenotazioneFormPage'));
+const PrenotazioneDettaglioPage = lazy(() => import('./pages/PrenotazioneDettaglioPage'));
 
 // Placeholder for pages not yet implemented
 const PlaceholderPage = () => (
@@ -71,7 +74,17 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Suspense fallback={<LoadingFallback />}><DashboardPage /></Suspense>} />
         <Route path="/produzione/clienti" element={<Suspense fallback={<LoadingFallback />}><ClientiPage /></Suspense>} />
         <Route path="/produzione/trasportatori" element={<Suspense fallback={<LoadingFallback />}><TrasportatoriPage /></Suspense>} />
+        <Route path="/produzione/prenotazioni" element={<Suspense fallback={<LoadingFallback />}><PrenotazioniListPage /></Suspense>} />
+        <Route path="/produzione/prenotazioni/nuova" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneFormPage /></Suspense>} />
+        <Route path="/produzione/prenotazioni/:id" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneDettaglioPage /></Suspense>} />
+        <Route path="/produzione/prenotazioni/:id/modifica" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneFormPage /></Suspense>} />
         <Route path="/produzione/*" element={<PlaceholderPage />} />
+        <Route path="/consegne/clienti" element={<Suspense fallback={<LoadingFallback />}><ClientiPage /></Suspense>} />
+        <Route path="/consegne/trasportatori" element={<Suspense fallback={<LoadingFallback />}><TrasportatoriPage /></Suspense>} />
+        <Route path="/consegne/prenotazioni" element={<Suspense fallback={<LoadingFallback />}><PrenotazioniListPage /></Suspense>} />
+        <Route path="/consegne/prenotazioni/nuova" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneFormPage /></Suspense>} />
+        <Route path="/consegne/prenotazioni/:id" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneDettaglioPage /></Suspense>} />
+        <Route path="/consegne/prenotazioni/:id/modifica" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneFormPage /></Suspense>} />
         <Route path="/consegne/*" element={<PlaceholderPage />} />
         <Route path="/impostazioni/*" element={<PlaceholderPage />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
