@@ -7,6 +7,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { it } from 'date-fns/locale';
 import theme from './theme/theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { RealtimeProvider } from './contexts/RealtimeContext';
 import MainLayout from './components/layout/MainLayout';
 
 // Lazy loaded pages
@@ -108,7 +109,9 @@ export default function App() {
       <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={it}>
         <BrowserRouter>
           <AuthProvider>
-            <AppRoutes />
+            <RealtimeProvider>
+              <AppRoutes />
+            </RealtimeProvider>
           </AuthProvider>
         </BrowserRouter>
       </LocalizationProvider>
