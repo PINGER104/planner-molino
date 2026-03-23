@@ -2,26 +2,26 @@ import { PaletteOptions } from '@mui/material/styles';
 
 export const palette: PaletteOptions = {
   primary: {
-    main: '#0F172A',      // Slate 900 — deep corporate navy
-    light: '#3B82F6',     // Blue 500 — vibrant accent
-    dark: '#020617',      // Slate 950
+    main: '#292524',      // Stone 800 — warm industrial dark
+    light: '#2563EB',     // Blue 600 — vibrant production accent
+    dark: '#1C1917',      // Stone 900
     contrastText: '#FFFFFF',
   },
   secondary: {
-    main: '#DC2626',      // Red 600 — consegne, alert accent
-    light: '#EF4444',     // Red 500
-    dark: '#991B1B',      // Red 800
+    main: '#C2410C',      // Orange 700 — terracotta/grain warmth
+    light: '#EA580C',     // Orange 600
+    dark: '#9A3412',      // Orange 800
     contrastText: '#FFFFFF',
   },
   success: {
-    main: '#059669',      // Emerald 600
-    light: '#10B981',     // Emerald 500
-    dark: '#047857',      // Emerald 700
+    main: '#15803D',      // Green 700
+    light: '#16A34A',     // Green 600
+    dark: '#166534',      // Green 800
   },
   warning: {
-    main: '#D97706',      // Amber 600
-    light: '#F59E0B',     // Amber 500
-    dark: '#B45309',      // Amber 700
+    main: '#B45309',      // Amber 700
+    light: '#D97706',     // Amber 600
+    dark: '#92400E',      // Amber 800
   },
   error: {
     main: '#DC2626',      // Red 600
@@ -29,24 +29,24 @@ export const palette: PaletteOptions = {
     dark: '#B91C1C',      // Red 700
   },
   background: {
-    default: '#F8FAFC',   // Slate 50 — cool off-white
+    default: '#FAF9F6',   // Warm cream off-white
     paper: '#FFFFFF',
   },
   grey: {
-    50:  '#F8FAFC',
-    100: '#F1F5F9',
-    200: '#E2E8F0',
-    300: '#CBD5E1',
-    400: '#94A3B8',
-    500: '#64748B',
-    600: '#475569',
-    700: '#334155',
-    800: '#1E293B',
-    900: '#0F172A',
+    50:  '#FAFAF9',       // Stone 50
+    100: '#F5F5F4',       // Stone 100
+    200: '#E7E5E4',       // Stone 200
+    300: '#D6D3D1',       // Stone 300
+    400: '#A8A29E',       // Stone 400
+    500: '#78716C',       // Stone 500
+    600: '#57534E',       // Stone 600
+    700: '#44403C',       // Stone 700
+    800: '#292524',       // Stone 800
+    900: '#1C1917',       // Stone 900
   },
   text: {
-    primary: '#0F172A',   // Slate 900
-    secondary: '#475569', // Slate 600
+    primary: '#1C1917',   // Stone 900
+    secondary: '#57534E', // Stone 600
   },
-  divider: '#E2E8F0',    // Slate 200
+  divider: '#E7E5E4',    // Stone 200
 };

@@ -16,16 +16,37 @@ export default function EmptyState({ title, description, icon: Icon, action }: E
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        py: 6,
+        py: 5,
         px: 2,
       }}
     >
-      <Icon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
-      <Typography variant="h6" gutterBottom>
+      <Box
+        sx={{
+          width: 56,
+          height: 56,
+          borderRadius: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: '#F5F5F4',
+          mb: 2,
+        }}
+      >
+        <Icon sx={{ fontSize: 28, color: '#A8A29E' }} />
+      </Box>
+      <Typography
+        variant="body1"
+        sx={{
+          fontWeight: 600,
+          color: '#57534E',
+          fontFamily: '"Sora", sans-serif',
+        }}
+        gutterBottom
+      >
         {title}
       </Typography>
       {description && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center', maxWidth: 300 }}>
           {description}
         </Typography>
       )}

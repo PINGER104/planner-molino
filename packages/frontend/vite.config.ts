@@ -66,6 +66,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      '@planner-molino/shared': path.resolve(__dirname, '../shared/src'),
       '@shared': path.resolve(__dirname, '../shared/src'),
       '@': path.resolve(__dirname, 'src'),
     },

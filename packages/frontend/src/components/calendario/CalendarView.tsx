@@ -1,15 +1,14 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import type { EventClickArg, EventDropArg, DatesSetArg, EventContentArg } from '@fullcalendar/core';
 import type { EventResizeDoneArg } from '@fullcalendar/interaction';
 import type { CalendarEvent } from '../../hooks/useCalendar';
 
-// FullCalendar theme overrides
 import './calendar-styles.css';
 
 interface CalendarViewProps {
@@ -33,26 +32,101 @@ function darkenColor(hex: string, amount = 30): string {
 
 function renderEventContent(eventInfo: EventContentArg) {
   const bgColor = eventInfo.event.backgroundColor || '#3B6FD4';
+  const ext = eventInfo.event.extendedProps || {};
+  const clienteName = (ext.cliente_ragione_sociale as string) || '';
+  const isTimeGrid = eventInfo.view.type.includes('timeGrid');
+
+  if (!isTimeGrid) {
+    // Month view - compact
+    return (
+      <Box
+        sx={{
+          px: 0.75,
+          py: 0.25,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontSize: '0.6875rem',
+          lineHeight: 1.3,
+          color: '#fff',
+          fontFamily: '"Figtree", sans-serif',
+        }}
+      >
+        <Box component="span" sx={{ fontWeight: 700, fontFamily: '"JetBrains Mono", monospace', fontSize: '0.625rem' }}>
+          {eventInfo.timeText}
+        </Box>
+        {' '}
+        <Box component="span" sx={{ fontWeight: 500 }}>{eventInfo.event.title}</Box>
+      </Box>
+    );
+  }
+
+  // Time grid view - rich card
   return (
     <Box
       sx={{
-        px: 0.5,
-        py: 0.25,
+        px: 0.75,
+        py: 0.5,
         overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        fontSize: '0.75rem',
-        lineHeight: 1.3,
-        color: '#fff',
-        borderLeft: `3px solid ${darkenColor(bgColor)}`,
         height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0.25,
+        borderLeft: `3px solid ${darkenColor(bgColor, 40)}`,
+        fontFamily: '"Figtree", sans-serif',
       }}
     >
-      <Box component="span" sx={{ fontWeight: 600 }}>
-        {eventInfo.timeText}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          flexShrink: 0,
+        }}
+      >
+        <Typography
+          component="span"
+          sx={{
+            fontWeight: 700,
+            fontSize: '0.625rem',
+            color: 'rgba(255,255,255,0.85)',
+            fontFamily: '"JetBrains Mono", monospace',
+            lineHeight: 1,
+          }}
+        >
+          {eventInfo.timeText}
+        </Typography>
       </Box>
-      {' '}
-      <Box component="span">{eventInfo.event.title}</Box>
+      <Typography
+        component="div"
+        sx={{
+          fontWeight: 600,
+          fontSize: '0.75rem',
+          color: '#fff',
+          lineHeight: 1.2,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {eventInfo.event.title}
+      </Typography>
+      {clienteName && (
+        <Typography
+          component="div"
+          sx={{
+            fontSize: '0.625rem',
+            color: 'rgba(255,255,255,0.7)',
+            lineHeight: 1.2,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontWeight: 500,
+          }}
+        >
+          {clienteName}
+        </Typography>
+      )}
     </Box>
   );
 }
@@ -79,13 +153,26 @@ export default function CalendarView({
       {/* Export button */}
       <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}>
         <Tooltip title="Esporta calendario">
-          <IconButton onClick={onExportClick} size="small">
-            <FileDownloadIcon />
+          <IconButton
+            onClick={onExportClick}
+            size="small"
+            sx={{
+              bgcolor: '#FAFAF9',
+              border: '1px solid #E7E5E4',
+              '&:hover': { bgcolor: '#F5F5F4' },
+            }}
+          >
+            <FileDownloadIcon sx={{ fontSize: 18 }} />
           </IconButton>
         </Tooltip>
       </Box>
 
-      <Box sx={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+      <Box
+        sx={{
+          opacity: loading ? 0.5 : 1,
+          transition: 'opacity 0.3s ease',
+        }}
+      >
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -118,7 +205,7 @@ export default function CalendarView({
           events={events.map((e) => ({
             ...e,
             id: String(e.id),
-            borderColor: darkenColor(e.backgroundColor || '#3B6FD4'),
+            borderColor: 'transparent',
             textColor: '#ffffff',
           }))}
           eventContent={renderEventContent}

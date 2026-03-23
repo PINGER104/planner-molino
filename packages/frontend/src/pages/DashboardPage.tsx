@@ -1,15 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { Grid, Box } from '@mui/material';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Grid, Box, Typography, Card, CardContent, Stack, Chip } from '@mui/material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import PageHeader from '../components/common/PageHeader';
+import FactoryIcon from '@mui/icons-material/Factory';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import KpiCard from '../components/dashboard/KpiCard';
 import PrenotazioniTable from '../components/dashboard/PrenotazioniTable';
 import QuickNavCards from '../components/dashboard/QuickNavCards';
+import StatusDistribution from '../components/dashboard/StatusDistribution';
+import TimelineStrip from '../components/dashboard/TimelineStrip';
 import { configurazioneService, prenotazioniService } from '../services';
+import { useAuth } from '../contexts/AuthContext';
 import type { Prenotazione } from '@planner-molino/shared';
 
 interface DashboardStats {
@@ -23,7 +29,15 @@ function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Buongiorno';
+  if (h < 18) return 'Buon pomeriggio';
+  return 'Buonasera';
+}
+
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [prenotazioniOggi, setPrenotazioniOggi] = useState<Prenotazione[]>([]);
   const [prenotazioniDomani, setPrenotazioniDomani] = useState<Prenotazione[]>([]);
@@ -53,11 +67,7 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return <LoadingSpinner text="Caricamento dashboard..." />;
-  }
-
-  // Derive KPI values from fetched data
+  // Derive KPI values
   const oggiTotale = stats?.prenotazioniOggi ?? prenotazioniOggi.length;
   const oggiInCorso = prenotazioniOggi.filter(
     (p) => ['preso_in_carico', 'in_produzione', 'in_preparazione', 'in_carico'].includes(p.stato)
@@ -69,46 +79,201 @@ export default function DashboardPage() {
     (p) => ['pianificato', 'pronto_carico'].includes(p.stato)
   ).length;
 
+  // Split by tipologia
+  const produzioneOggi = prenotazioniOggi.filter((p) => p.tipologia === 'produzione');
+  const consegneOggi = prenotazioniOggi.filter((p) => p.tipologia === 'consegna');
+
+  if (loading) {
+    return <LoadingSpinner text="Caricamento dashboard..." />;
+  }
+
   return (
-    <Box>
-      <PageHeader title="Dashboard" subtitle="Panoramica giornaliera" />
+    <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+      {/* Header greeting */}
+      <Box sx={{ mb: 3 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 800,
+            color: '#1C1917',
+            letterSpacing: '-0.02em',
+            lineHeight: 1.2,
+          }}
+        >
+          {getGreeting()}, {user?.nome || 'Operatore'}
+        </Typography>
+        <Typography variant="body2" sx={{ color: '#78716C', mt: 0.5 }}>
+          {format(new Date(), "EEEE d MMMM yyyy", { locale: it })} — Panoramica giornaliera
+        </Typography>
+      </Box>
 
       {/* KPI Cards */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item xs={6} md={3}>
-          <KpiCard title="Oggi" value={oggiTotale} icon={CalendarTodayIcon} color="#1B2A4A" />
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={3}>
+          <KpiCard
+            title="Oggi"
+            value={oggiTotale}
+            icon={CalendarTodayIcon}
+            color="#292524"
+            subtitle="prenotazioni totali"
+          />
         </Grid>
-        <Grid item xs={6} md={3}>
-          <KpiCard title="In corso" value={oggiInCorso} icon={PlayArrowIcon} color="#ED6C02" />
+        <Grid item xs={6} sm={3}>
+          <KpiCard
+            title="In corso"
+            value={oggiInCorso}
+            icon={PlayArrowIcon}
+            color="#B45309"
+            subtitle="attive ora"
+          />
         </Grid>
-        <Grid item xs={6} md={3}>
-          <KpiCard title="Completate" value={oggiCompletate} icon={CheckCircleIcon} color="#2E7D32" />
+        <Grid item xs={6} sm={3}>
+          <KpiCard
+            title="Completate"
+            value={oggiCompletate}
+            icon={CheckCircleIcon}
+            color="#15803D"
+            subtitle="finalizzate"
+          />
         </Grid>
-        <Grid item xs={6} md={3}>
-          <KpiCard title="In attesa" value={inAttesa} icon={HourglassEmptyIcon} color="#C2410C" />
+        <Grid item xs={6} sm={3}>
+          <KpiCard
+            title="In attesa"
+            value={inAttesa}
+            icon={HourglassEmptyIcon}
+            color="#C2410C"
+            subtitle="da avviare"
+          />
         </Grid>
       </Grid>
 
-      {/* Prenotazioni Oggi */}
-      <Box sx={{ mb: 4 }}>
-        <PrenotazioniTable
-          prenotazioni={prenotazioniOggi}
-          title="Prenotazioni Oggi"
-          emptyMessage="Nessuna prenotazione per oggi"
-        />
-      </Box>
+      {/* Timeline + Status distribution */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={8}>
+          <TimelineStrip prenotazioni={prenotazioniOggi} />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card variant="outlined" sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+              <StatusDistribution prenotazioni={prenotazioniOggi} />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-      {/* Prenotazioni Domani */}
-      <Box sx={{ mb: 4 }}>
-        <PrenotazioniTable
-          prenotazioni={prenotazioniDomani}
-          title="Prenotazioni Domani"
-          emptyMessage="Nessuna prenotazione per domani"
-        />
-      </Box>
+      {/* Production / Delivery split */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6}>
+          <Card
+            variant="outlined"
+            sx={{
+              borderColor: '#DBEAFE',
+              '&:hover': { borderColor: '#93C5FD' },
+            }}
+          >
+            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+              <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: '#EFF6FF',
+                  }}
+                >
+                  <FactoryIcon sx={{ fontSize: 16, color: '#2563EB' }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="overline" sx={{ color: '#2563EB', lineHeight: 1 }}>
+                    Produzione
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 800,
+                    color: '#2563EB',
+                    fontFamily: '"Sora", sans-serif',
+                  }}
+                >
+                  {produzioneOggi.length}
+                </Typography>
+              </Stack>
+              <StatusDistribution prenotazioni={produzioneOggi} title="" />
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Card
+            variant="outlined"
+            sx={{
+              borderColor: '#FECACA',
+              '&:hover': { borderColor: '#FCA5A5' },
+            }}
+          >
+            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+              <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: '#FEF2F2',
+                  }}
+                >
+                  <LocalShippingIcon sx={{ fontSize: 16, color: '#DC2626' }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="overline" sx={{ color: '#DC2626', lineHeight: 1 }}>
+                    Consegne
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 800,
+                    color: '#DC2626',
+                    fontFamily: '"Sora", sans-serif',
+                  }}
+                >
+                  {consegneOggi.length}
+                </Typography>
+              </Stack>
+              <StatusDistribution prenotazioni={consegneOggi} title="" />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Prenotazioni Tables */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} lg={6}>
+          <PrenotazioniTable
+            prenotazioni={prenotazioniOggi}
+            title="Prenotazioni Oggi"
+            emptyMessage="Nessuna prenotazione per oggi"
+          />
+        </Grid>
+        <Grid item xs={12} lg={6}>
+          <PrenotazioniTable
+            prenotazioni={prenotazioniDomani}
+            title="Prenotazioni Domani"
+            emptyMessage="Nessuna prenotazione per domani"
+          />
+        </Grid>
+      </Grid>
 
       {/* Quick Nav */}
       <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1.5, color: '#78716C' }}>
+          Accesso rapido
+        </Typography>
         <QuickNavCards />
       </Box>
     </Box>

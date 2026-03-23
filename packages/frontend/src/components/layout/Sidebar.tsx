@@ -28,13 +28,12 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
-const DRAWER_WIDTH = 256;
+const DRAWER_WIDTH = 260;
 
-// Section accent colors
 const SECTION_COLORS = {
-  produzione: '#3B82F6',   // Blue 500
-  consegne: '#EF4444',     // Red 500
-  impostazioni: '#64748B', // Slate 500
+  produzione: '#60A5FA',  // Blue 400 - bright on dark
+  consegne: '#F87171',    // Red 400 - bright on dark
+  impostazioni: '#A8A29E', // Stone 400
 };
 
 interface SidebarProps {
@@ -82,8 +81,8 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
     px: 2,
     py: 1,
     mx: 1,
-    borderRadius: '6px',
-    '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+    borderRadius: '8px',
+    '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
   };
 
   const navItemSx = (path: string, accentColor: string) => ({
@@ -91,37 +90,37 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
     py: 0.75,
     mx: 1,
     my: 0.25,
-    borderRadius: '6px',
+    borderRadius: '8px',
     position: 'relative' as const,
     transition: 'all 0.15s ease',
     ...(isActive(path) ? {
-      bgcolor: 'rgba(255,255,255,0.08)',
+      bgcolor: 'rgba(255,255,255,0.07)',
       '&::before': {
         content: '""',
         position: 'absolute',
         left: 0,
-        top: '25%',
-        bottom: '25%',
-        width: '2px',
-        borderRadius: '0 2px 2px 0',
+        top: '20%',
+        bottom: '20%',
+        width: '3px',
+        borderRadius: '0 3px 3px 0',
         backgroundColor: accentColor,
       },
     } : {
-      '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
+      '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
     }),
   });
 
   const iconSx = (active: boolean, color: string) => ({
-    color: active ? color : 'rgba(255,255,255,0.45)',
+    color: active ? color : 'rgba(255,255,255,0.35)',
     fontSize: 18,
     transition: 'color 0.15s ease',
   });
 
   const textSx = (active: boolean) => ({
-    color: active ? '#FFFFFF' : 'rgba(255,255,255,0.6)',
+    color: active ? '#FFFFFF' : 'rgba(255,255,255,0.55)',
     fontSize: '0.8125rem',
     fontWeight: active ? 600 : 400,
-    fontFamily: '"DM Sans", sans-serif',
+    fontFamily: '"Figtree", sans-serif',
   });
 
   const drawerPaperSx = {
@@ -130,8 +129,8 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
     top: 64,
     height: 'calc(100% - 64px)',
     overflowX: 'hidden' as const,
-    background: '#0F172A',
-    borderRight: '1px solid rgba(255,255,255,0.06)',
+    background: 'linear-gradient(180deg, #1C1917 0%, #292524 100%)',
+    borderRight: '1px solid rgba(255,255,255,0.04)',
   };
 
   const drawerContent = (
@@ -147,7 +146,7 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
               <ListItemText
                 primary="Produzione"
                 primaryTypographyProps={{
-                  fontFamily: '"Plus Jakarta Sans", sans-serif',
+                  fontFamily: '"Sora", sans-serif',
                   fontWeight: 600,
                   fontSize: '0.8125rem',
                   color: '#FFFFFF',
@@ -155,8 +154,8 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
                 }}
               />
               {produzioneOpen
-                ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
-                : <ExpandMore sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
+                ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.25)', fontSize: 18 }} />
+                : <ExpandMore sx={{ color: 'rgba(255,255,255,0.25)', fontSize: 18 }} />
               }
             </ListItemButton>
           </ListItem>
@@ -177,7 +176,7 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
               ))}
             </List>
           </Collapse>
-          <Box sx={{ mx: 2.5, my: 1.5, height: '1px', bgcolor: 'rgba(255,255,255,0.06)' }} />
+          <Box sx={{ mx: 2.5, my: 1.5, height: '1px', bgcolor: 'rgba(255,255,255,0.05)' }} />
         </Box>
       )}
 
@@ -192,7 +191,7 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
               <ListItemText
                 primary="Consegne"
                 primaryTypographyProps={{
-                  fontFamily: '"Plus Jakarta Sans", sans-serif',
+                  fontFamily: '"Sora", sans-serif',
                   fontWeight: 600,
                   fontSize: '0.8125rem',
                   color: '#FFFFFF',
@@ -200,8 +199,8 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
                 }}
               />
               {consegneOpen
-                ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
-                : <ExpandMore sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
+                ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.25)', fontSize: 18 }} />
+                : <ExpandMore sx={{ color: 'rgba(255,255,255,0.25)', fontSize: 18 }} />
               }
             </ListItemButton>
           </ListItem>
@@ -222,7 +221,7 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
               ))}
             </List>
           </Collapse>
-          <Box sx={{ mx: 2.5, my: 1.5, height: '1px', bgcolor: 'rgba(255,255,255,0.06)' }} />
+          <Box sx={{ mx: 2.5, my: 1.5, height: '1px', bgcolor: 'rgba(255,255,255,0.05)' }} />
         </Box>
       )}
 
@@ -237,7 +236,7 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
               <ListItemText
                 primary="Impostazioni"
                 primaryTypographyProps={{
-                  fontFamily: '"Plus Jakarta Sans", sans-serif',
+                  fontFamily: '"Sora", sans-serif',
                   fontWeight: 600,
                   fontSize: '0.8125rem',
                   color: '#FFFFFF',
@@ -245,8 +244,8 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
                 }}
               />
               {impostazioniOpen
-                ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
-                : <ExpandMore sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
+                ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.25)', fontSize: 18 }} />
+                : <ExpandMore sx={{ color: 'rgba(255,255,255,0.25)', fontSize: 18 }} />
               }
             </ListItemButton>
           </ListItem>
@@ -269,18 +268,18 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
       )}
 
       {/* Version footer */}
-      <Box sx={{ mt: 4, mx: 2.5, pt: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <Box sx={{ mt: 4, mx: 2.5, pt: 2, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <Typography
           sx={{
-            fontSize: '0.625rem',
-            color: 'rgba(255,255,255,0.2)',
-            fontFamily: '"Plus Jakarta Sans", sans-serif',
-            fontWeight: 500,
-            letterSpacing: '0.08em',
+            fontSize: '0.5625rem',
+            color: 'rgba(255,255,255,0.15)',
+            fontFamily: '"Sora", sans-serif',
+            fontWeight: 600,
+            letterSpacing: '0.12em',
             textTransform: 'uppercase',
           }}
         >
-          Molino 4.0
+          Planner Molino v4.0
         </Typography>
       </Box>
     </Box>

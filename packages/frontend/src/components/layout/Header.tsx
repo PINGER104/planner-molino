@@ -10,6 +10,7 @@ import {
   MenuItem,
   Avatar,
   Divider,
+  Chip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -57,7 +58,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
         bgcolor: '#FFFFFF',
-        borderBottom: '1px solid #E2E8F0',
+        borderBottom: '1px solid #E7E5E4',
         color: 'text.primary',
         height: 64,
       }}
@@ -69,8 +70,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           onClick={onToggleSidebar}
           sx={{
             mr: 2,
-            color: '#334155',
-            '&:hover': { bgcolor: '#F1F5F9' },
+            color: '#44403C',
+            '&:hover': { bgcolor: '#FAFAF9' },
           }}
         >
           <MenuIcon />
@@ -91,32 +92,45 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
             src="/logo-molino.png"
             alt="Molino 4.0"
             sx={{
-              height: 28,
+              height: 26,
               width: 'auto',
-              opacity: 0.85,
+              opacity: 0.9,
             }}
           />
           <Box
             sx={{
-              height: 18,
+              height: 20,
               width: '1px',
-              bgcolor: '#E2E8F0',
+              bgcolor: '#E7E5E4',
             }}
           />
           <Typography
-            variant="h6"
             noWrap
             sx={{
-              fontFamily: '"Plus Jakarta Sans", sans-serif',
+              fontFamily: '"Sora", sans-serif',
               fontWeight: 700,
-              letterSpacing: '0.08em',
-              fontSize: '0.75rem',
-              color: '#475569',
+              letterSpacing: '0.1em',
+              fontSize: '0.6875rem',
+              color: '#78716C',
               textTransform: 'uppercase',
             }}
           >
             Planner
           </Typography>
+          <Chip
+            label="4.0"
+            size="small"
+            sx={{
+              height: 18,
+              fontSize: '0.5625rem',
+              fontWeight: 700,
+              fontFamily: '"JetBrains Mono", monospace',
+              bgcolor: '#F5F5F4',
+              color: '#A8A29E',
+              border: '1px solid #E7E5E4',
+              '& .MuiChip-label': { px: 0.75 },
+            }}
+          />
         </Box>
 
         {user && (
@@ -124,11 +138,12 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
             <Typography
               variant="body2"
               sx={{
-                mr: 1,
+                mr: 0.5,
                 fontWeight: 500,
-                color: '#475569',
+                color: '#57534E',
                 fontSize: '0.8125rem',
                 display: { xs: 'none', sm: 'block' },
+                fontFamily: '"Figtree", sans-serif',
               }}
             >
               {user.nome} {user.cognome}
@@ -139,16 +154,16 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               aria-controls="menu-appbar"
               aria-haspopup="true"
               onClick={handleMenu}
-              sx={{ '&:hover': { bgcolor: '#F1F5F9' } }}
+              sx={{ '&:hover': { bgcolor: '#FAFAF9' } }}
             >
               <Avatar
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: '#0F172A',
-                  fontSize: '0.75rem',
-                  fontFamily: '"Plus Jakarta Sans", sans-serif',
-                  fontWeight: 600,
+                  bgcolor: '#292524',
+                  fontSize: '0.6875rem',
+                  fontFamily: '"Sora", sans-serif',
+                  fontWeight: 700,
                 }}
               >
                 {user.nome?.charAt(0)}
@@ -169,19 +184,27 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               }}
               open={Boolean(anchorEl)}
               onClose={handleClose}
+              slotProps={{
+                paper: {
+                  sx: { borderRadius: 2, border: '1px solid #E7E5E4', mt: 0.5, minWidth: 180 },
+                },
+              }}
             >
-              <MenuItem disabled>
-                <Typography variant="body2" color="textSecondary" sx={{ fontSize: '0.75rem' }}>
-                  {user.ruolo || 'Utente'}
+              <Box sx={{ px: 2, py: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#1C1917', fontSize: '0.8125rem' }}>
+                  {user.nome} {user.cognome}
                 </Typography>
-              </MenuItem>
+                <Typography variant="caption" sx={{ color: '#A8A29E' }}>
+                  {user.ruolo || 'Operatore'}
+                </Typography>
+              </Box>
               <Divider />
-              <MenuItem onClick={handleSettings} sx={{ fontSize: '0.8125rem' }}>
-                <Settings fontSize="small" sx={{ mr: 1, color: '#64748B' }} />
-                Impostazioni profilo
+              <MenuItem onClick={handleSettings} sx={{ fontSize: '0.8125rem', py: 1 }}>
+                <Settings fontSize="small" sx={{ mr: 1.5, color: '#78716C', fontSize: 18 }} />
+                Impostazioni
               </MenuItem>
-              <MenuItem onClick={handleLogout} sx={{ fontSize: '0.8125rem' }}>
-                <Logout fontSize="small" sx={{ mr: 1, color: '#64748B' }} />
+              <MenuItem onClick={handleLogout} sx={{ fontSize: '0.8125rem', py: 1, color: '#DC2626' }}>
+                <Logout fontSize="small" sx={{ mr: 1.5, fontSize: 18 }} />
                 Esci
               </MenuItem>
             </Menu>

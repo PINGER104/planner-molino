@@ -12,11 +12,11 @@ function getContrastColor(hexColor: string): string {
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5 ? '#000000' : '#FFFFFF';
+  return luminance > 0.5 ? '#1C1917' : '#FFFFFF';
 }
 
 export default function StatoBadge({ stato }: StatoBadgeProps) {
-  const bgColor = COLORI_STATO[stato] || '#9E9E9E';
+  const bgColor = COLORI_STATO[stato] || '#A8A29E';
   const label = LABELS_STATO[stato] || stato;
   const textColor = getContrastColor(bgColor);
 
@@ -27,7 +27,11 @@ export default function StatoBadge({ stato }: StatoBadgeProps) {
       sx={{
         backgroundColor: bgColor,
         color: textColor,
-        fontWeight: 500,
+        fontWeight: 600,
+        fontSize: '0.625rem',
+        height: 22,
+        letterSpacing: '0.02em',
+        '& .MuiChip-label': { px: 1 },
       }}
     />
   );
