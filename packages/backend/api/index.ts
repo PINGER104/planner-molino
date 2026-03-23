@@ -1,2 +1,3 @@
-// Vercel serverless entry - populated in Task 3
-export {};
+import app from '../src/index';
+
+export default app;
