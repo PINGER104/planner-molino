@@ -1,0 +1,67 @@
+/* Override FullCalendar to match theme */
+.fc {
+  --fc-border-color: #E8E5DF;
+  --fc-today-bg-color: rgba(59, 111, 212, 0.05);
+  --fc-now-indicator-color: #DC2626;
+  font-family: 'Source Sans 3', sans-serif;
+}
+
+.fc .fc-toolbar-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.fc .fc-button-primary {
+  background-color: #1B2A4A;
+  border-color: #1B2A4A;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.875rem;
+  text-transform: none;
+}
+
+.fc .fc-button-primary:hover {
+  background-color: #0F1D35;
+  border-color: #0F1D35;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: #3B6FD4;
+  border-color: #3B6FD4;
+}
+
+.fc .fc-button-primary:focus {
+  box-shadow: 0 0 0 2px rgba(59, 111, 212, 0.3);
+}
+
+.fc .fc-event {
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.fc .fc-event:hover {
+  filter: brightness(0.92);
+}
+
+.fc .fc-timegrid-slot {
+  height: 2.5em;
+}
+
+.fc .fc-col-header-cell-cushion {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.fc .fc-daygrid-day-number {
+  font-weight: 500;
+}
+
+.fc .fc-scrollgrid {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.fc td, .fc th {
+  border-color: #E8E5DF;
+}

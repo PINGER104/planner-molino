@@ -17,6 +17,9 @@ const TrasportatoriPage = lazy(() => import('./pages/TrasportatoriPage'));
 const PrenotazioniListPage = lazy(() => import('./pages/PrenotazioniListPage'));
 const PrenotazioneFormPage = lazy(() => import('./pages/PrenotazioneFormPage'));
 const PrenotazioneDettaglioPage = lazy(() => import('./pages/PrenotazioneDettaglioPage'));
+const CalendarioPage = lazy(() => import('./pages/CalendarioPage'));
+const UtentiPage = lazy(() => import('./pages/UtentiPage'));
+const TempiCicloPage = lazy(() => import('./pages/TempiCicloPage'));
 
 // Placeholder for pages not yet implemented
 const PlaceholderPage = () => (
@@ -78,6 +81,7 @@ function AppRoutes() {
         <Route path="/produzione/prenotazioni/nuova" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneFormPage /></Suspense>} />
         <Route path="/produzione/prenotazioni/:id" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneDettaglioPage /></Suspense>} />
         <Route path="/produzione/prenotazioni/:id/modifica" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneFormPage /></Suspense>} />
+        <Route path="/produzione/calendario" element={<Suspense fallback={<LoadingFallback />}><CalendarioPage /></Suspense>} />
         <Route path="/produzione/*" element={<PlaceholderPage />} />
         <Route path="/consegne/clienti" element={<Suspense fallback={<LoadingFallback />}><ClientiPage /></Suspense>} />
         <Route path="/consegne/trasportatori" element={<Suspense fallback={<LoadingFallback />}><TrasportatoriPage /></Suspense>} />
@@ -85,7 +89,10 @@ function AppRoutes() {
         <Route path="/consegne/prenotazioni/nuova" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneFormPage /></Suspense>} />
         <Route path="/consegne/prenotazioni/:id" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneDettaglioPage /></Suspense>} />
         <Route path="/consegne/prenotazioni/:id/modifica" element={<Suspense fallback={<LoadingFallback />}><PrenotazioneFormPage /></Suspense>} />
+        <Route path="/consegne/calendario" element={<Suspense fallback={<LoadingFallback />}><CalendarioPage /></Suspense>} />
         <Route path="/consegne/*" element={<PlaceholderPage />} />
+        <Route path="/impostazioni/utenti" element={<Suspense fallback={<LoadingFallback />}><UtentiPage /></Suspense>} />
+        <Route path="/impostazioni/tempi-ciclo" element={<Suspense fallback={<LoadingFallback />}><TempiCicloPage /></Suspense>} />
         <Route path="/impostazioni/*" element={<PlaceholderPage />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
