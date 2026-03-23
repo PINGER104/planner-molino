@@ -11,6 +11,9 @@ import MainLayout from './components/layout/MainLayout';
 
 // Lazy loaded pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ClientiPage = lazy(() => import('./pages/ClientiPage'));
+const TrasportatoriPage = lazy(() => import('./pages/TrasportatoriPage'));
 
 // Placeholder for pages not yet implemented
 const PlaceholderPage = () => (
@@ -65,7 +68,9 @@ function AppRoutes() {
           </PrivateRoute>
         }
       >
-        <Route path="/dashboard" element={<PlaceholderPage />} />
+        <Route path="/dashboard" element={<Suspense fallback={<LoadingFallback />}><DashboardPage /></Suspense>} />
+        <Route path="/produzione/clienti" element={<Suspense fallback={<LoadingFallback />}><ClientiPage /></Suspense>} />
+        <Route path="/produzione/trasportatori" element={<Suspense fallback={<LoadingFallback />}><TrasportatoriPage /></Suspense>} />
         <Route path="/produzione/*" element={<PlaceholderPage />} />
         <Route path="/consegne/*" element={<PlaceholderPage />} />
         <Route path="/impostazioni/*" element={<PlaceholderPage />} />
