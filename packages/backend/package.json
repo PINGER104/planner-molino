@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "api/index.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "DOTENV_CONFIG_PATH=../../.env tsx watch --require dotenv/config src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },

@@ -1,6 +1,11 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load .env from monorepo root BEFORE any other imports that need env vars
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { apiLimiter } from './middleware/rateLimit';
 import authRoutes from './routes/auth.routes';
 import clientiRoutes from './routes/clienti.routes';
@@ -8,8 +13,6 @@ import trasportatoriRoutes from './routes/trasportatori.routes';
 import prenotazioniRoutes from './routes/prenotazioni.routes';
 import utentiRoutes from './routes/utenti.routes';
 import configurazioneRoutes from './routes/configurazione.routes';
-
-dotenv.config();
 
 const app = express();
 
