@@ -8,29 +8,34 @@ import {
   ListItemIcon,
   ListItemText,
   Collapse,
-  Divider,
   Box,
   Typography,
-  IconButton,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
 import {
+  ExpandLess,
+  ExpandMore,
   CalendarMonth,
   ListAlt,
   People,
   LocalShipping,
   Settings,
+  Factory,
+  Inventory,
   ManageAccounts,
   Timer,
-  ExpandLess,
-  ExpandMore,
-  ChevronLeft,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
-const SIDEBAR_WIDTH = 260;
-const SIDEBAR_COLLAPSED_WIDTH = 60;
+const DRAWER_WIDTH = 256;
+
+// Section accent colors
+const SECTION_COLORS = {
+  produzione: '#3B82F6',   // Blue 500
+  consegne: '#EF4444',     // Red 500
+  impostazioni: '#64748B', // Slate 500
+};
 
 interface SidebarProps {
   open: boolean;
@@ -39,57 +44,6 @@ interface SidebarProps {
   onToggleCollapse: () => void;
 }
 
-interface NavItem {
-  label: string;
-  icon: React.ReactElement;
-  path: string;
-}
-
-interface NavSection {
-  key: string;
-  label: string;
-  color: string;
-  sezione: 'produzione' | 'consegne' | 'impostazioni';
-  items: NavItem[];
-}
-
-const sections: NavSection[] = [
-  {
-    key: 'produzione',
-    label: 'PRODUZIONE',
-    color: '#1B2A4A',
-    sezione: 'produzione',
-    items: [
-      { label: 'Calendario', icon: <CalendarMonth />, path: '/produzione/calendario' },
-      { label: 'Prenotazioni', icon: <ListAlt />, path: '/produzione/prenotazioni' },
-      { label: 'Clienti', icon: <People />, path: '/produzione/clienti' },
-      { label: 'Trasportatori', icon: <LocalShipping />, path: '/produzione/trasportatori' },
-    ],
-  },
-  {
-    key: 'consegne',
-    label: 'CONSEGNE',
-    color: '#C2410C',
-    sezione: 'consegne',
-    items: [
-      { label: 'Calendario', icon: <CalendarMonth />, path: '/consegne/calendario' },
-      { label: 'Prenotazioni', icon: <ListAlt />, path: '/consegne/prenotazioni' },
-      { label: 'Clienti', icon: <People />, path: '/consegne/clienti' },
-      { label: 'Trasportatori', icon: <LocalShipping />, path: '/consegne/trasportatori' },
-    ],
-  },
-  {
-    key: 'impostazioni',
-    label: 'IMPOSTAZIONI',
-    color: '#78716C',
-    sezione: 'impostazioni',
-    items: [
-      { label: 'Gestione Utenti', icon: <ManageAccounts />, path: '/impostazioni/utenti' },
-      { label: 'Tempi Ciclo', icon: <Timer />, path: '/impostazioni/tempi-ciclo' },
-    ],
-  },
-];
-
 export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -97,161 +51,238 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
   const location = useLocation();
   const { user } = useAuth();
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    produzione: true,
-    consegne: true,
-    impostazioni: true,
-  });
+  const hasSection = (sezione: string) =>
+    user?.sezioni_abilitate?.includes(sezione as 'produzione' | 'consegne');
+  const canModify = user?.livello_accesso === 'modifica';
 
-  const toggleSection = (key: string) => {
-    if (collapsed && !isMobile) return;
-    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  const [produzioneOpen, setProduzioneOpen] = useState(
+    location.pathname.startsWith('/produzione')
+  );
+  const [consegneOpen, setConsegneOpen] = useState(
+    location.pathname.startsWith('/consegne')
+  );
+  const [impostazioniOpen, setImpostazioniOpen] = useState(
+    location.pathname.startsWith('/impostazioni')
+  );
+
+  React.useEffect(() => {
+    if (location.pathname.startsWith('/produzione')) setProduzioneOpen(true);
+    if (location.pathname.startsWith('/consegne')) setConsegneOpen(true);
+    if (location.pathname.startsWith('/impostazioni')) setImpostazioniOpen(true);
+  }, [location.pathname]);
 
   const handleNavigate = (path: string) => {
     navigate(path);
     if (isMobile) onClose();
   };
 
-  const visibleSections = sections.filter((section) => {
-    if (section.sezione === 'impostazioni') {
-      return user?.livello_accesso === 'modifica';
-    }
-    return user?.sezioni_abilitate?.includes(section.sezione as 'produzione' | 'consegne');
+  const isActive = (path: string) => location.pathname === path;
+
+  const sectionHeaderSx = {
+    px: 2,
+    py: 1,
+    mx: 1,
+    borderRadius: '6px',
+    '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+  };
+
+  const navItemSx = (path: string, accentColor: string) => ({
+    pl: 3,
+    py: 0.75,
+    mx: 1,
+    my: 0.25,
+    borderRadius: '6px',
+    position: 'relative' as const,
+    transition: 'all 0.15s ease',
+    ...(isActive(path) ? {
+      bgcolor: 'rgba(255,255,255,0.08)',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        left: 0,
+        top: '25%',
+        bottom: '25%',
+        width: '2px',
+        borderRadius: '0 2px 2px 0',
+        backgroundColor: accentColor,
+      },
+    } : {
+      '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
+    }),
   });
 
-  const currentWidth = collapsed && !isMobile ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
+  const iconSx = (active: boolean, color: string) => ({
+    color: active ? color : 'rgba(255,255,255,0.45)',
+    fontSize: 18,
+    transition: 'color 0.15s ease',
+  });
+
+  const textSx = (active: boolean) => ({
+    color: active ? '#FFFFFF' : 'rgba(255,255,255,0.6)',
+    fontSize: '0.8125rem',
+    fontWeight: active ? 600 : 400,
+    fontFamily: '"DM Sans", sans-serif',
+  });
+
+  const drawerPaperSx = {
+    width: DRAWER_WIDTH,
+    boxSizing: 'border-box' as const,
+    top: 64,
+    height: 'calc(100% - 64px)',
+    overflowX: 'hidden' as const,
+    background: '#0F172A',
+    borderRight: '1px solid rgba(255,255,255,0.06)',
+  };
 
   const drawerContent = (
-    <Box
-      sx={{
-        width: currentWidth,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        transition: 'width 0.2s ease',
-      }}
-    >
-      {/* Collapse button (desktop only) */}
-      {!isMobile && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 0.5 }}>
-          <IconButton onClick={onToggleCollapse} size="small">
-            <ChevronLeft
-              sx={{
-                transform: collapsed ? 'rotate(180deg)' : 'none',
-                transition: 'transform 0.2s',
-              }}
-            />
-          </IconButton>
+    <Box sx={{ overflow: 'auto', mt: 2, pb: 2 }}>
+      {/* Produzione */}
+      {hasSection('produzione') && (
+        <Box sx={{ mb: 0.5 }}>
+          <ListItem disablePadding>
+            <ListItemButton sx={sectionHeaderSx} onClick={() => setProduzioneOpen(!produzioneOpen)}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <Factory sx={{ color: SECTION_COLORS.produzione, fontSize: 20 }} />
+              </ListItemIcon>
+              <ListItemText
+                primary="Produzione"
+                primaryTypographyProps={{
+                  fontFamily: '"Plus Jakarta Sans", sans-serif',
+                  fontWeight: 600,
+                  fontSize: '0.8125rem',
+                  color: '#FFFFFF',
+                  letterSpacing: '0.01em',
+                }}
+              />
+              {produzioneOpen
+                ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
+                : <ExpandMore sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
+              }
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={produzioneOpen} timeout="auto">
+            <List component="div" disablePadding>
+              {[
+                { path: '/produzione/calendario', label: 'Calendario', icon: CalendarMonth },
+                { path: '/produzione/prenotazioni', label: 'Prenotazioni', icon: ListAlt },
+                { path: '/produzione/clienti', label: 'Clienti', icon: People },
+                { path: '/produzione/trasportatori', label: 'Trasportatori', icon: LocalShipping },
+              ].map(({ path, label, icon: Icon }) => (
+                <ListItemButton key={path} sx={navItemSx(path, SECTION_COLORS.produzione)} onClick={() => handleNavigate(path)}>
+                  <ListItemIcon sx={{ minWidth: 30 }}>
+                    <Icon sx={iconSx(isActive(path), SECTION_COLORS.produzione)} />
+                  </ListItemIcon>
+                  <ListItemText primary={label} primaryTypographyProps={textSx(isActive(path))} />
+                </ListItemButton>
+              ))}
+            </List>
+          </Collapse>
+          <Box sx={{ mx: 2.5, my: 1.5, height: '1px', bgcolor: 'rgba(255,255,255,0.06)' }} />
         </Box>
       )}
 
-      <Divider />
-
-      {/* Navigation sections */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-        {visibleSections.map((section) => (
-          <React.Fragment key={section.key}>
-            {/* Section header */}
-            <ListItem
-              disablePadding
-              sx={{ display: 'block' }}
-            >
-              <ListItemButton
-                onClick={() => toggleSection(section.key)}
-                sx={{
-                  minHeight: 40,
-                  px: collapsed && !isMobile ? 1.5 : 2,
-                  backgroundColor: section.color,
-                  '&:hover': { backgroundColor: section.color, opacity: 0.9 },
+      {/* Consegne */}
+      {hasSection('consegne') && (
+        <Box sx={{ mb: 0.5 }}>
+          <ListItem disablePadding>
+            <ListItemButton sx={sectionHeaderSx} onClick={() => setConsegneOpen(!consegneOpen)}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <Inventory sx={{ color: SECTION_COLORS.consegne, fontSize: 20 }} />
+              </ListItemIcon>
+              <ListItemText
+                primary="Consegne"
+                primaryTypographyProps={{
+                  fontFamily: '"Plus Jakarta Sans", sans-serif',
+                  fontWeight: 600,
+                  fontSize: '0.8125rem',
+                  color: '#FFFFFF',
+                  letterSpacing: '0.01em',
                 }}
-              >
-                {collapsed && !isMobile ? (
-                  <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center', color: '#fff' }}>
-                    <Settings fontSize="small" />
+              />
+              {consegneOpen
+                ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
+                : <ExpandMore sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
+              }
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={consegneOpen} timeout="auto">
+            <List component="div" disablePadding>
+              {[
+                { path: '/consegne/calendario', label: 'Calendario', icon: CalendarMonth },
+                { path: '/consegne/prenotazioni', label: 'Prenotazioni', icon: ListAlt },
+                { path: '/consegne/clienti', label: 'Clienti', icon: People },
+                { path: '/consegne/trasportatori', label: 'Trasportatori', icon: LocalShipping },
+              ].map(({ path, label, icon: Icon }) => (
+                <ListItemButton key={path} sx={navItemSx(path, SECTION_COLORS.consegne)} onClick={() => handleNavigate(path)}>
+                  <ListItemIcon sx={{ minWidth: 30 }}>
+                    <Icon sx={iconSx(isActive(path), SECTION_COLORS.consegne)} />
                   </ListItemIcon>
-                ) : (
-                  <>
-                    <ListItemText
-                      primary={section.label}
-                      primaryTypographyProps={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        letterSpacing: 1.2,
-                        color: '#fff',
-                      }}
-                    />
-                    {openSections[section.key] ? (
-                      <ExpandLess sx={{ color: '#fff', fontSize: 18 }} />
-                    ) : (
-                      <ExpandMore sx={{ color: '#fff', fontSize: 18 }} />
-                    )}
-                  </>
-                )}
-              </ListItemButton>
-            </ListItem>
+                  <ListItemText primary={label} primaryTypographyProps={textSx(isActive(path))} />
+                </ListItemButton>
+              ))}
+            </List>
+          </Collapse>
+          <Box sx={{ mx: 2.5, my: 1.5, height: '1px', bgcolor: 'rgba(255,255,255,0.06)' }} />
+        </Box>
+      )}
 
-            {/* Section items */}
-            <Collapse
-              in={collapsed && !isMobile ? false : openSections[section.key]}
-              timeout="auto"
-              unmountOnExit
-            >
-              <List disablePadding>
-                {section.items.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <ListItem key={item.path} disablePadding sx={{ display: 'block' }}>
-                      <ListItemButton
-                        onClick={() => handleNavigate(item.path)}
-                        sx={{
-                          minHeight: 44,
-                          px: collapsed && !isMobile ? 1.5 : 3,
-                          backgroundColor: isActive ? `${section.color}14` : 'transparent',
-                          borderRight: isActive ? `3px solid ${section.color}` : '3px solid transparent',
-                          '&:hover': {
-                            backgroundColor: `${section.color}0A`,
-                          },
-                        }}
-                      >
-                        <ListItemIcon
-                          sx={{
-                            minWidth: collapsed && !isMobile ? 0 : 36,
-                            justifyContent: 'center',
-                            color: isActive ? section.color : 'text.secondary',
-                          }}
-                        >
-                          {item.icon}
-                        </ListItemIcon>
-                        {!(collapsed && !isMobile) && (
-                          <ListItemText
-                            primary={item.label}
-                            primaryTypographyProps={{
-                              fontSize: 14,
-                              fontWeight: isActive ? 600 : 400,
-                              color: isActive ? section.color : 'text.primary',
-                            }}
-                          />
-                        )}
-                      </ListItemButton>
-                    </ListItem>
-                  );
-                })}
-              </List>
-            </Collapse>
-          </React.Fragment>
-        ))}
-      </Box>
+      {/* Impostazioni */}
+      {canModify && (
+        <Box>
+          <ListItem disablePadding>
+            <ListItemButton sx={sectionHeaderSx} onClick={() => setImpostazioniOpen(!impostazioniOpen)}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <Settings sx={{ color: SECTION_COLORS.impostazioni, fontSize: 20 }} />
+              </ListItemIcon>
+              <ListItemText
+                primary="Impostazioni"
+                primaryTypographyProps={{
+                  fontFamily: '"Plus Jakarta Sans", sans-serif',
+                  fontWeight: 600,
+                  fontSize: '0.8125rem',
+                  color: '#FFFFFF',
+                  letterSpacing: '0.01em',
+                }}
+              />
+              {impostazioniOpen
+                ? <ExpandLess sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
+                : <ExpandMore sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 18 }} />
+              }
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={impostazioniOpen} timeout="auto">
+            <List component="div" disablePadding>
+              {[
+                { path: '/impostazioni/utenti', label: 'Gestione Utenti', icon: ManageAccounts },
+                { path: '/impostazioni/tempi-ciclo', label: 'Tempi Ciclo', icon: Timer },
+              ].map(({ path, label, icon: Icon }) => (
+                <ListItemButton key={path} sx={navItemSx(path, '#FFFFFF')} onClick={() => handleNavigate(path)}>
+                  <ListItemIcon sx={{ minWidth: 30 }}>
+                    <Icon sx={iconSx(isActive(path), '#FFFFFF')} />
+                  </ListItemIcon>
+                  <ListItemText primary={label} primaryTypographyProps={textSx(isActive(path))} />
+                </ListItemButton>
+              ))}
+            </List>
+          </Collapse>
+        </Box>
+      )}
 
       {/* Version footer */}
-      {!(collapsed && !isMobile) && (
-        <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="caption" color="text.secondary">
-            Planner Molino v4.0
-          </Typography>
-        </Box>
-      )}
+      <Box sx={{ mt: 4, mx: 2.5, pt: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <Typography
+          sx={{
+            fontSize: '0.625rem',
+            color: 'rgba(255,255,255,0.2)',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Molino 4.0
+        </Typography>
+      </Box>
     </Box>
   );
 
@@ -259,17 +290,11 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
     return (
       <Drawer
         variant="temporary"
+        anchor="left"
         open={open}
         onClose={onClose}
         ModalProps={{ keepMounted: true }}
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: SIDEBAR_WIDTH,
-            boxSizing: 'border-box',
-            top: 64,
-            height: 'calc(100% - 64px)',
-          },
-        }}
+        sx={{ '& .MuiDrawer-paper': drawerPaperSx }}
       >
         {drawerContent}
       </Drawer>
@@ -278,19 +303,18 @@ export default function Sidebar({ open, collapsed, onClose, onToggleCollapse }: 
 
   return (
     <Drawer
-      variant="permanent"
-      open
+      variant="persistent"
+      anchor="left"
+      open={!collapsed}
       sx={{
-        width: currentWidth,
+        width: collapsed ? 0 : DRAWER_WIDTH,
         flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: currentWidth,
-          boxSizing: 'border-box',
-          top: 64,
-          height: 'calc(100% - 64px)',
-          transition: 'width 0.2s ease',
-          overflowX: 'hidden',
-        },
+        transition: (t: any) =>
+          t.transitions.create('width', {
+            easing: t.transitions.easing.easeInOut,
+            duration: 200,
+          }),
+        '& .MuiDrawer-paper': drawerPaperSx,
       }}
     >
       {drawerContent}

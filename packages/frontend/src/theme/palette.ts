@@ -2,51 +2,51 @@ import { PaletteOptions } from '@mui/material/styles';
 
 export const palette: PaletteOptions = {
   primary: {
-    main: '#1B2A4A',    // Navy
-    light: '#3B6FD4',   // Blu
-    dark: '#0F1D35',    // Navy scuro
+    main: '#0F172A',      // Slate 900 — deep corporate navy
+    light: '#3B82F6',     // Blue 500 — vibrant accent
+    dark: '#020617',      // Slate 950
     contrastText: '#FFFFFF',
   },
   secondary: {
-    main: '#C2410C',    // Terracotta
-    light: '#EA580C',   // Arancio caldo
-    dark: '#9A3412',
+    main: '#DC2626',      // Red 600 — consegne, alert accent
+    light: '#EF4444',     // Red 500
+    dark: '#991B1B',      // Red 800
     contrastText: '#FFFFFF',
   },
   success: {
-    main: '#16A34A',    // Verde foresta
-    light: '#22C55E',
-    dark: '#15803D',
+    main: '#059669',      // Emerald 600
+    light: '#10B981',     // Emerald 500
+    dark: '#047857',      // Emerald 700
   },
   warning: {
-    main: '#CA8A04',    // Ambra
-    light: '#EAB308',
-    dark: '#A16207',
+    main: '#D97706',      // Amber 600
+    light: '#F59E0B',     // Amber 500
+    dark: '#B45309',      // Amber 700
   },
   error: {
-    main: '#DC2626',    // Rosso
-    light: '#EF4444',
-    dark: '#B91C1C',
+    main: '#DC2626',      // Red 600
+    light: '#EF4444',     // Red 500
+    dark: '#B91C1C',      // Red 700
   },
   background: {
-    default: '#F5F3EF', // Beige caldo
+    default: '#F8FAFC',   // Slate 50 — cool off-white
     paper: '#FFFFFF',
   },
   grey: {
-    50: '#FAFAF9',
-    100: '#F5F5F4',
-    200: '#E7E5E4',
-    300: '#D6D3D1',
-    400: '#A8A29E',
-    500: '#78716C',
-    600: '#57534E',
-    700: '#44403C',
-    800: '#292524',
-    900: '#1C1917',
+    50:  '#F8FAFC',
+    100: '#F1F5F9',
+    200: '#E2E8F0',
+    300: '#CBD5E1',
+    400: '#94A3B8',
+    500: '#64748B',
+    600: '#475569',
+    700: '#334155',
+    800: '#1E293B',
+    900: '#0F172A',
   },
   text: {
-    primary: '#1C1917',
-    secondary: '#57534E',
+    primary: '#0F172A',   // Slate 900
+    secondary: '#475569', // Slate 600
   },
-  divider: '#E8E5DF',
+  divider: '#E2E8F0',    // Slate 200
 };

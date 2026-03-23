@@ -4,22 +4,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Box,
-  Card,
-  CardContent,
   TextField,
   Button,
   Typography,
   Alert,
-  CircularProgress,
   InputAdornment,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
-import {
-  Email as EmailIcon,
-  Visibility,
-  VisibilityOff,
-  Lock as LockIcon,
-} from '@mui/icons-material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { loginSchema, type LoginInput } from '@planner-molino/shared';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -62,128 +55,243 @@ export default function LoginPage() {
       sx={{
         minHeight: '100vh',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1B2A4A 0%, #3B6FD4 50%, #C2410C 100%)',
-        p: 2,
+        flexDirection: { xs: 'column', md: 'row' },
       }}
     >
-      <Card
+      {/* Left panel — branding */}
+      <Box
         sx={{
-          maxWidth: 400,
-          width: '100%',
-          borderRadius: 4,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          flex: { xs: 'none', md: '0 0 42%' },
+          minHeight: { xs: 180, md: '100vh' },
+          background: '#0F172A',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+          px: 4,
+          py: { xs: 5, md: 0 },
         }}
       >
-        <CardContent sx={{ p: 4 }}>
-          {/* Title */}
-          <Typography
-            variant="h4"
-            component="h1"
+        {/* Subtle grid pattern */}
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.03,
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)
+            `,
+            backgroundSize: '48px 48px',
+          }}
+        />
+
+        {/* Glow accent */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '30%',
+            left: '40%',
+            width: 280,
+            height: 280,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%)',
+            filter: 'blur(50px)',
+          }}
+        />
+
+        <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 340 }}>
+          <Box
+            component="img"
+            src="/logo-molino.png"
+            alt="Molino 4.0"
             sx={{
-              fontFamily: '"Outfit", sans-serif',
+              height: { xs: 44, md: 52 },
+              width: 'auto',
+              filter: 'brightness(0) invert(1)',
+              opacity: 0.9,
+              mb: 3,
+            }}
+          />
+          <Typography
+            sx={{
+              fontFamily: '"Plus Jakarta Sans", sans-serif',
+              fontWeight: 800,
+              fontSize: { xs: '1.5rem', md: '2rem' },
+              color: '#FFFFFF',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+              mb: 1.5,
+            }}
+          >
+            PLANNER
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: '"DM Sans", sans-serif',
+              fontSize: '0.875rem',
+              color: 'rgba(255,255,255,0.45)',
+              lineHeight: 1.6,
+              fontWeight: 400,
+            }}
+          >
+            Sistema di pianificazione
+            <br />
+            produzione e consegne
+          </Typography>
+
+          {/* Decorative line */}
+          <Box
+            sx={{
+              width: 32,
+              height: 2,
+              borderRadius: 1,
+              bgcolor: '#3B82F6',
+              mx: 'auto',
+              mt: 3,
+              opacity: 0.6,
+            }}
+          />
+        </Box>
+      </Box>
+
+      {/* Right panel — form */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          px: { xs: 3, sm: 6 },
+          py: { xs: 5, md: 0 },
+          bgcolor: '#FFFFFF',
+        }}
+      >
+        <Box sx={{ width: '100%', maxWidth: 360 }}>
+          <Typography
+            sx={{
+              fontFamily: '"Plus Jakarta Sans", sans-serif',
               fontWeight: 700,
-              textAlign: 'center',
-              color: 'primary.main',
+              fontSize: '1.375rem',
+              color: '#0F172A',
               mb: 0.5,
             }}
           >
-            Planner Molino
+            Accedi
           </Typography>
           <Typography
             variant="body2"
             sx={{
-              textAlign: 'center',
-              color: 'text.secondary',
+              color: '#64748B',
               mb: 4,
+              fontSize: '0.8125rem',
             }}
           >
-            Accedi al sistema
+            Inserisci le tue credenziali per continuare
           </Typography>
 
-          {/* Error alert */}
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+            <Alert severity="error" sx={{ mb: 2.5 }} onClose={() => setError(null)}>
               {error}
             </Alert>
           )}
 
-          {/* Form */}
           <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-            <TextField
-              {...register('email')}
-              label="Email"
-              type="email"
-              fullWidth
-              autoComplete="email"
-              autoFocus
-              error={!!errors.email}
-              helperText={errors.email?.message}
-              sx={{ mb: 2.5 }}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon color="action" />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
+            <Box sx={{ mb: 2.5 }}>
+              <Typography
+                component="label"
+                sx={{
+                  display: 'block',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  mb: 0.75,
+                  fontFamily: '"Plus Jakarta Sans", sans-serif',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Email
+              </Typography>
+              <TextField
+                {...register('email')}
+                fullWidth
+                type="email"
+                autoComplete="email"
+                autoFocus
+                error={!!errors.email}
+                helperText={errors.email?.message}
+                placeholder="nome@azienda.it"
+                size="medium"
+              />
+            </Box>
 
-            <TextField
-              {...register('password')}
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              fullWidth
-              autoComplete="current-password"
-              error={!!errors.password}
-              helperText={errors.password?.message}
-              sx={{ mb: 3 }}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        edge="end"
-                        size="small"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
+            <Box sx={{ mb: 3.5 }}>
+              <Typography
+                component="label"
+                sx={{
+                  display: 'block',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  mb: 0.75,
+                  fontFamily: '"Plus Jakarta Sans", sans-serif',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Password
+              </Typography>
+              <TextField
+                {...register('password')}
+                fullWidth
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                placeholder="Inserisci password"
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Box>
 
             <Button
               type="submit"
-              variant="contained"
               fullWidth
+              variant="contained"
               size="large"
               disabled={isLoading}
               sx={{
-                height: 48,
+                py: 1.3,
+                fontSize: '0.875rem',
+                fontFamily: '"Plus Jakarta Sans", sans-serif',
                 fontWeight: 600,
-                fontSize: 16,
               }}
             >
               {isLoading ? (
-                <CircularProgress size={24} color="inherit" />
+                <CircularProgress size={22} color="inherit" />
               ) : (
-                'Accedi'
+                'Accedi al sistema'
               )}
             </Button>
           </Box>
-        </CardContent>
-      </Card>
+        </Box>
+      </Box>
     </Box>
   );
 }

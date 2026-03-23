@@ -1,47 +1,51 @@
-/* Override FullCalendar to match theme */
+/* Override FullCalendar to match corporate theme */
 .fc {
-  --fc-border-color: #E8E5DF;
-  --fc-today-bg-color: rgba(59, 111, 212, 0.05);
+  --fc-border-color: #E2E8F0;
+  --fc-today-bg-color: rgba(59, 130, 246, 0.04);
   --fc-now-indicator-color: #DC2626;
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'DM Sans', sans-serif;
 }
 
 .fc .fc-toolbar-title {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  font-size: 1.25rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: #0F172A;
 }
 
 .fc .fc-button-primary {
-  background-color: #1B2A4A;
-  border-color: #1B2A4A;
-  font-family: 'Source Sans 3', sans-serif;
-  font-size: 0.875rem;
+  background-color: #0F172A;
+  border-color: #0F172A;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
   text-transform: none;
+  border-radius: 6px;
 }
 
 .fc .fc-button-primary:hover {
-  background-color: #0F1D35;
-  border-color: #0F1D35;
+  background-color: #1E293B;
+  border-color: #1E293B;
 }
 
 .fc .fc-button-primary:not(:disabled).fc-button-active {
-  background-color: #3B6FD4;
-  border-color: #3B6FD4;
+  background-color: #3B82F6;
+  border-color: #3B82F6;
 }
 
 .fc .fc-button-primary:focus {
-  box-shadow: 0 0 0 2px rgba(59, 111, 212, 0.3);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .fc .fc-event {
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
 }
 
 .fc .fc-event:hover {
-  filter: brightness(0.92);
+  filter: brightness(0.93);
 }
 
 .fc .fc-timegrid-slot {
@@ -49,12 +53,17 @@
 }
 
 .fc .fc-col-header-cell-cushion {
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 600;
+  font-size: 0.75rem;
   text-transform: capitalize;
+  color: #475569;
 }
 
 .fc .fc-daygrid-day-number {
   font-weight: 500;
+  font-size: 0.8125rem;
+  color: #334155;
 }
 
 .fc .fc-scrollgrid {
@@ -63,5 +72,5 @@
 }
 
 .fc td, .fc th {
-  border-color: #E8E5DF;
+  border-color: #E2E8F0;
 }
