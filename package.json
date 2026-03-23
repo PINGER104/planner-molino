@@ -1,0 +1,18 @@
+{
+  "name": "planner-molino",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev:frontend": "npm run dev -w packages/frontend",
+    "dev:backend": "npm run dev -w packages/backend",
+    "build:shared": "npm run build -w packages/shared",
+    "build:frontend": "npm run build -w packages/frontend",
+    "build:backend": "npm run build -w packages/backend",
+    "build": "npm run build:shared && npm run build:frontend && npm run build:backend",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

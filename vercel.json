@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "packages/frontend/dist",
+  "functions": {
+    "packages/backend/api/index.ts": {
+      "runtime": "@vercel/node@3"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/packages/backend/api/index.ts" },
+    { "source": "/(.*)", "destination": "/packages/frontend/dist/index.html" }
+  ]
+}

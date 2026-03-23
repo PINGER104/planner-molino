@@ -1,0 +1,13 @@
+{
+  "name": "@planner-molino/backend",
+  "version": "1.0.0",
+  "main": "api/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@planner-molino/shared": "*"
+  }
+}
