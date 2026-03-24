@@ -14,8 +14,9 @@ export function validate(schema: ZodSchema) {
       if (err instanceof ZodError) {
         res.status(400).json({
           error: 'Dati non validi',
-          details: err.errors.map(e => ({
-            campo: e.path.join('.'),
+          code: 'VALIDATION_ERROR',
+          details: err.issues.map((e) => ({
+            campo: (e.path as (string | number)[]).join('.'),
             messaggio: e.message,
           })),
         });

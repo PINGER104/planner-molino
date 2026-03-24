@@ -1,13 +1,5 @@
 import { api } from './api';
-import type { Trasportatore } from '@planner-molino/shared';
-
-interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+import type { Trasportatore, PaginatedResponse } from '@planner-molino/shared';
 
 interface DropdownItem {
   id: number;

@@ -1,23 +1,14 @@
 import { api } from './api';
-import type { ConfigurazioneTempiCiclo } from '@planner-molino/shared';
-
-interface DashboardStats {
-  prenotazioniOggi: number;
-  prenotazioniSettimana: number;
-  clientiAttivi: number;
-  trasportatoriAttivi: number;
-}
+import type { ConfigurazioneTempiCiclo, DashboardStats } from '@planner-molino/shared';
 
 interface CalcoloDurataRequest {
   categoria: string;
-  quantita_ton: number;
+  quantita_kg: number;
+  cambio_prodotto?: boolean;
 }
 
 interface CalcoloDurataResponse {
   durata_minuti: number;
-  tempo_setup: number;
-  tempo_lavorazione: number;
-  tempo_pulizia: number;
 }
 
 export const configurazioneService = {

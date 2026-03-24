@@ -1,11 +1,17 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import pool from '../config/database';
+import { logger } from '../lib/logger';
+import { sanitizeSearch, buildUpdateClauses } from '../lib/queryBuilder';
+import { NotFoundError, BusinessRuleError } from '../lib/errors';
 
-function sanitizeSearch(input: string): string {
-  return input.replace(/[%_'\\]/g, '').trim();
-}
+// Column whitelist — only these columns can be SET via update()
+const TRASPORTATORI_ALLOWED = [
+  'ragione_sociale', 'partita_iva', 'indirizzo_sede',
+  'referente_nome', 'referente_telefono', 'referente_email',
+  'tipologie_mezzi', 'certificazioni', 'rating_puntualita', 'note',
+] as const;
 
-export async function list(req: Request, res: Response): Promise<void> {
+export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
@@ -50,41 +56,41 @@ export async function list(req: Request, res: Response): Promise<void> {
       totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error('Trasportatori list error:', err);
-    res.status(500).json({ error: 'Errore nel recupero trasportatori' });
+    logger.error({ err }, 'Trasportatori list error');
+    next(err);
   }
 }
 
-export async function dropdown(req: Request, res: Response): Promise<void> {
+export async function dropdown(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await pool.query(
       'SELECT id, codice, ragione_sociale FROM trasportatori WHERE attivo = true ORDER BY ragione_sociale ASC'
     );
     res.json(result.rows);
   } catch (err) {
-    console.error('Trasportatori dropdown error:', err);
-    res.status(500).json({ error: 'Errore nel recupero trasportatori' });
+    logger.error({ err }, 'Trasportatori dropdown error');
+    next(err);
   }
 }
 
-export async function getById(req: Request, res: Response): Promise<void> {
+export async function getById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
     const result = await pool.query('SELECT * FROM trasportatori WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Trasportatore non trovato' });
-      return;
+      throw new NotFoundError('Trasportatore');
     }
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Trasportatori getById error:', err);
-    res.status(500).json({ error: 'Errore nel recupero trasportatore' });
+    if (err instanceof NotFoundError) return next(err);
+    logger.error({ err }, 'Trasportatori getById error');
+    next(err);
   }
 }
 
-export async function create(req: Request, res: Response): Promise<void> {
+export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await pool.query(
       'SELECT * FROM create_trasportatore($1::jsonb)',
@@ -93,24 +99,20 @@ export async function create(req: Request, res: Response): Promise<void> {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Trasportatori create error:', err);
-    res.status(500).json({ error: 'Errore nella creazione trasportatore' });
+    logger.error({ err }, 'Trasportatori create error');
+    next(err);
   }
 }
 
-export async function update(req: Request, res: Response): Promise<void> {
+export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
-    const fields = req.body;
-    const keys = Object.keys(fields);
 
-    if (keys.length === 0) {
-      res.status(400).json({ error: 'Nessun campo da aggiornare' });
-      return;
+    const { setClauses, values } = buildUpdateClauses(req.body, TRASPORTATORI_ALLOWED);
+
+    if (setClauses.length === 0) {
+      throw new BusinessRuleError('Nessun campo da aggiornare');
     }
-
-    const setClauses = keys.map((key, i) => `${key} = $${i + 2}`);
-    const values = keys.map((key) => fields[key]);
 
     const result = await pool.query(
       `UPDATE trasportatori SET ${setClauses.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING *`,
@@ -118,18 +120,18 @@ export async function update(req: Request, res: Response): Promise<void> {
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Trasportatore non trovato' });
-      return;
+      throw new NotFoundError('Trasportatore');
     }
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Trasportatori update error:', err);
-    res.status(500).json({ error: 'Errore nell\'aggiornamento trasportatore' });
+    if (err instanceof NotFoundError || err instanceof BusinessRuleError) return next(err);
+    logger.error({ err }, 'Trasportatori update error');
+    next(err);
   }
 }
 
-export async function remove(req: Request, res: Response): Promise<void> {
+export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
     const hard = req.query.hard === 'true';
@@ -137,8 +139,7 @@ export async function remove(req: Request, res: Response): Promise<void> {
     if (hard) {
       const result = await pool.query('DELETE FROM trasportatori WHERE id = $1 RETURNING id', [id]);
       if (result.rows.length === 0) {
-        res.status(404).json({ error: 'Trasportatore non trovato' });
-        return;
+        throw new NotFoundError('Trasportatore');
       }
       res.json({ message: 'Trasportatore eliminato definitivamente' });
     } else {
@@ -147,13 +148,13 @@ export async function remove(req: Request, res: Response): Promise<void> {
         [id]
       );
       if (result.rows.length === 0) {
-        res.status(404).json({ error: 'Trasportatore non trovato' });
-        return;
+        throw new NotFoundError('Trasportatore');
       }
       res.json(result.rows[0]);
     }
   } catch (err) {
-    console.error('Trasportatori remove error:', err);
-    res.status(500).json({ error: 'Errore nella rimozione trasportatore' });
+    if (err instanceof NotFoundError) return next(err);
+    logger.error({ err }, 'Trasportatori remove error');
+    next(err);
   }
 }

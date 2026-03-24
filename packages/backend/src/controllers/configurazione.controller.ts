@@ -1,22 +1,25 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import pool from '../config/database';
 import { calcolaDurataPrevista } from '@planner-molino/shared';
+import { logger } from '../lib/logger';
+import { NotFoundError } from '../lib/errors';
 
-export async function getTempiCiclo(req: Request, res: Response): Promise<void> {
+export async function getTempiCiclo(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await pool.query(
       'SELECT * FROM configurazione_tempi_ciclo WHERE attivo = true ORDER BY categoria'
     );
     res.json(result.rows);
   } catch (err) {
-    console.error('Configurazione getTempiCiclo error:', err);
-    res.status(500).json({ error: 'Errore nel recupero tempi ciclo' });
+    logger.error({ err }, 'Configurazione getTempiCiclo error');
+    next(err);
   }
 }
 
-export async function updateTempiCiclo(req: Request, res: Response): Promise<void> {
+export async function updateTempiCiclo(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { categoria } = req.params;
+    // Body is already validated by Zod (updateTempiCicloSchema)
     const { ton_ora, tempo_setup_minuti, tempo_pulizia_minuti } = req.body;
 
     const result = await pool.query(
@@ -31,35 +34,29 @@ export async function updateTempiCiclo(req: Request, res: Response): Promise<voi
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Categoria non trovata' });
-      return;
+      throw new NotFoundError('Categoria');
     }
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Configurazione updateTempiCiclo error:', err);
-    res.status(500).json({ error: 'Errore nell\'aggiornamento tempi ciclo' });
+    if (err instanceof NotFoundError) return next(err);
+    logger.error({ err }, 'Configurazione updateTempiCiclo error');
+    next(err);
   }
 }
 
-export async function calcolaDurata(req: Request, res: Response): Promise<void> {
+export async function calcolaDurata(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    // Body is already validated by Zod (calcolaDurataSchema)
     const { categoria, quantita_kg, cambio_prodotto } = req.body;
 
-    if (!categoria || !quantita_kg) {
-      res.status(400).json({ error: 'Parametri categoria e quantita_kg obbligatori' });
-      return;
-    }
-
-    // Fetch config from DB
     const configResult = await pool.query(
       'SELECT ton_ora, tempo_setup_minuti, tempo_pulizia_minuti FROM configurazione_tempi_ciclo WHERE categoria = $1 AND attivo = true',
       [categoria]
     );
 
     if (configResult.rows.length === 0) {
-      res.status(404).json({ error: 'Configurazione non trovata per la categoria' });
-      return;
+      throw new NotFoundError('Configurazione per la categoria');
     }
 
     const config = configResult.rows[0];
@@ -74,12 +71,13 @@ export async function calcolaDurata(req: Request, res: Response): Promise<void> 
 
     res.json({ durata_minuti });
   } catch (err) {
-    console.error('Configurazione calcolaDurata error:', err);
-    res.status(500).json({ error: 'Errore nel calcolo durata' });
+    if (err instanceof NotFoundError) return next(err);
+    logger.error({ err }, 'Configurazione calcolaDurata error');
+    next(err);
   }
 }
 
-export async function getDashboardStats(req: Request, res: Response): Promise<void> {
+export async function getDashboardStats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await pool.query(`
       SELECT
@@ -94,7 +92,7 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Configurazione getDashboardStats error:', err);
-    res.status(500).json({ error: 'Errore nel recupero statistiche dashboard' });
+    logger.error({ err }, 'Configurazione getDashboardStats error');
+    next(err);
   }
 }

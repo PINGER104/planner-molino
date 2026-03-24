@@ -1,12 +1,31 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import pool from '../config/database';
 import { COLORI_STATO, STATI_FINALI } from '@planner-molino/shared';
+import { logger } from '../lib/logger';
+import { sanitizeSearch, buildUpdateClauses } from '../lib/queryBuilder';
+import { NotFoundError, BusinessRuleError } from '../lib/errors';
 
-function sanitizeSearch(input: string): string {
-  return input.replace(/[%_'\\]/g, '').trim();
-}
+// Column whitelists — only these columns can be SET via update()
+const PRENOTAZIONI_ALLOWED = [
+  'tipologia', 'cliente_id', 'trasportatore_id', 'data_pianificata',
+  'ora_inizio_prevista', 'ora_fine_prevista', 'durata_prevista_minuti',
+  'prodotto_codice', 'prodotto_descrizione', 'categoria_prodotto',
+  'specifica_w', 'specifica_w_tolleranza', 'specifica_pl', 'specifica_pl_tolleranza',
+  'altre_specifiche', 'quantita_prevista', 'unita_misura', 'quantita_kg',
+  'lotto_previsto', 'lotto_scadenza', 'origine_materiale', 'silos_origine',
+  'linea_produzione', 'prenotazione_consegna_collegata', 'prenotazione_produzione_collegata',
+  'tipologia_carico', 'ordine_riferimento', 'ddt_riferimento', 'priorita', 'note',
+] as const;
 
-export async function list(req: Request, res: Response): Promise<void> {
+const DATI_CARICO_ALLOWED = [
+  'data_carico', 'ora_inizio_carico', 'ora_fine_carico', 'operatore_nome',
+  'idoneita_trasporto', 'idoneita_note', 'targa_automezzo', 'targa_rimorchio',
+  'nome_autista', 'lotto_caricato', 'scadenza_lotto', 'peso_caricato_kg',
+  'peso_tara_kg', 'peso_lordo_kg', 'tipologia_carico', 'numero_colli',
+  'ddt_numero', 'ddt_data', 'foto_carico', 'certificato_lavaggio',
+] as const;
+
+export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
@@ -89,12 +108,12 @@ export async function list(req: Request, res: Response): Promise<void> {
       totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error('Prenotazioni list error:', err);
-    res.status(500).json({ error: 'Errore nel recupero prenotazioni' });
+    logger.error({ err }, 'Prenotazioni list error');
+    next(err);
   }
 }
 
-export async function calendario(req: Request, res: Response): Promise<void> {
+export async function calendario(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const start = req.query.start as string;
     const end = req.query.end as string;
@@ -144,40 +163,43 @@ export async function calendario(req: Request, res: Response): Promise<void> {
 
     res.json(events);
   } catch (err) {
-    console.error('Prenotazioni calendario error:', err);
-    res.status(500).json({ error: 'Errore nel recupero calendario' });
+    logger.error({ err }, 'Prenotazioni calendario error');
+    next(err);
   }
 }
 
-export async function getById(req: Request, res: Response): Promise<void> {
+export async function getById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
 
     const [prenotazioneRes, storicoRes, datiCaricoRes, transizioniRes] = await Promise.all([
       pool.query('SELECT * FROM prenotazioni_view WHERE id = $1', [id]),
       pool.query('SELECT * FROM storico_stati_view WHERE prenotazione_id = $1 ORDER BY data_cambio DESC', [id]),
-      pool.query('SELECT * FROM dati_carico WHERE prenotazione_id = $1 ORDER BY created_at DESC', [id]),
+      // 1:1 relationship — return single record or null
+      pool.query('SELECT * FROM dati_carico WHERE prenotazione_id = $1 ORDER BY created_at DESC LIMIT 1', [id]),
       pool.query('SELECT * FROM get_transizioni_possibili($1)', [id]),
     ]);
 
     if (prenotazioneRes.rows.length === 0) {
-      res.status(404).json({ error: 'Prenotazione non trovata' });
-      return;
+      throw new NotFoundError('Prenotazione');
     }
 
     res.json({
       prenotazione: prenotazioneRes.rows[0],
       storico: storicoRes.rows,
-      datiCarico: datiCaricoRes.rows,
-      transizioniPossibili: transizioniRes.rows,
+      datiCarico: datiCaricoRes.rows[0] ?? null,
+      transizioniPossibili: transizioniRes.rows.map((r: Record<string, unknown>) =>
+        (r.stato ?? r.transizione ?? Object.values(r)[0]) as string
+      ),
     });
   } catch (err) {
-    console.error('Prenotazioni getById error:', err);
-    res.status(500).json({ error: 'Errore nel recupero prenotazione' });
+    if (err instanceof NotFoundError) return next(err);
+    logger.error({ err }, 'Prenotazioni getById error');
+    next(err);
   }
 }
 
-export async function create(req: Request, res: Response): Promise<void> {
+export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const data = { ...req.body, created_by: req.user!.id };
 
@@ -188,12 +210,12 @@ export async function create(req: Request, res: Response): Promise<void> {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Prenotazioni create error:', err);
-    res.status(500).json({ error: 'Errore nella creazione prenotazione' });
+    logger.error({ err }, 'Prenotazioni create error');
+    next(err);
   }
 }
 
-export async function update(req: Request, res: Response): Promise<void> {
+export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
 
@@ -204,25 +226,18 @@ export async function update(req: Request, res: Response): Promise<void> {
     );
 
     if (checkResult.rows.length === 0) {
-      res.status(404).json({ error: 'Prenotazione non trovata' });
-      return;
+      throw new NotFoundError('Prenotazione');
     }
 
     if ((STATI_FINALI as readonly string[]).includes(checkResult.rows[0].stato)) {
-      res.status(400).json({ error: 'Impossibile modificare una prenotazione in stato finale' });
-      return;
+      throw new BusinessRuleError('Impossibile modificare una prenotazione in stato finale');
     }
 
-    const fields = req.body;
-    const keys = Object.keys(fields);
+    const { setClauses, values } = buildUpdateClauses(req.body, PRENOTAZIONI_ALLOWED);
 
-    if (keys.length === 0) {
-      res.status(400).json({ error: 'Nessun campo da aggiornare' });
-      return;
+    if (setClauses.length === 0) {
+      throw new BusinessRuleError('Nessun campo da aggiornare');
     }
-
-    const setClauses = keys.map((key, i) => `${key} = $${i + 2}`);
-    const values = keys.map((key) => fields[key]);
 
     const result = await pool.query(
       `UPDATE prenotazioni SET ${setClauses.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING *`,
@@ -231,12 +246,13 @@ export async function update(req: Request, res: Response): Promise<void> {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Prenotazioni update error:', err);
-    res.status(500).json({ error: 'Errore nell\'aggiornamento prenotazione' });
+    if (err instanceof NotFoundError || err instanceof BusinessRuleError) return next(err);
+    logger.error({ err }, 'Prenotazioni update error');
+    next(err);
   }
 }
 
-export async function cambioStato(req: Request, res: Response): Promise<void> {
+export async function cambioStato(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
     const { stato, note } = req.body;
@@ -247,18 +263,20 @@ export async function cambioStato(req: Request, res: Response): Promise<void> {
     );
 
     res.json(result.rows[0]);
-  } catch (err: any) {
-    console.error('Prenotazioni cambioStato error:', err);
-    // DB function raises exceptions for invalid transitions
-    if (err.message) {
-      res.status(400).json({ error: err.message });
-    } else {
-      res.status(500).json({ error: 'Errore nel cambio stato' });
+  } catch (err: unknown) {
+    // PostgreSQL RAISE EXCEPTION (code P0001) from state machine stored procedure
+    // — surface as business rule error. Other errors pass through to centralized handler.
+    const pgErr = err as { code?: string; message?: string };
+    if (pgErr.code === 'P0001' && pgErr.message) {
+      logger.warn({ err }, 'Prenotazioni cambioStato business rule violation');
+      return next(new BusinessRuleError(pgErr.message));
     }
+    logger.error({ err }, 'Prenotazioni cambioStato error');
+    next(err);
   }
 }
 
-export async function remove(req: Request, res: Response): Promise<void> {
+export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
 
@@ -268,38 +286,40 @@ export async function remove(req: Request, res: Response): Promise<void> {
     );
 
     if (checkResult.rows.length === 0) {
-      res.status(404).json({ error: 'Prenotazione non trovata' });
-      return;
+      throw new NotFoundError('Prenotazione');
     }
 
     if (checkResult.rows[0].stato !== 'pianificato') {
-      res.status(400).json({ error: 'Eliminazione consentita solo per prenotazioni in stato pianificato' });
-      return;
+      throw new BusinessRuleError('Eliminazione consentita solo per prenotazioni in stato pianificato');
     }
 
     await pool.query('DELETE FROM prenotazioni WHERE id = $1', [id]);
     res.json({ message: 'Prenotazione eliminata' });
   } catch (err) {
-    console.error('Prenotazioni remove error:', err);
-    res.status(500).json({ error: 'Errore nella rimozione prenotazione' });
+    if (err instanceof NotFoundError || err instanceof BusinessRuleError) return next(err);
+    logger.error({ err }, 'Prenotazioni remove error');
+    next(err);
   }
 }
 
-export async function getDatiCarico(req: Request, res: Response): Promise<void> {
+// ─── Dati Carico (1:1 relationship with prenotazione) ────────
+
+export async function getDatiCarico(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      'SELECT * FROM dati_carico WHERE prenotazione_id = $1 ORDER BY created_at DESC',
+      'SELECT * FROM dati_carico WHERE prenotazione_id = $1 ORDER BY created_at DESC LIMIT 1',
       [id]
     );
-    res.json(result.rows);
+    // 1:1 relationship — return single object or null
+    res.json(result.rows[0] ?? null);
   } catch (err) {
-    console.error('Prenotazioni getDatiCarico error:', err);
-    res.status(500).json({ error: 'Errore nel recupero dati carico' });
+    logger.error({ err }, 'Prenotazioni getDatiCarico error');
+    next(err);
   }
 }
 
-export async function createDatiCarico(req: Request, res: Response): Promise<void> {
+export async function createDatiCarico(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
     const data = { ...req.body, operatore_id: req.user!.id };
@@ -311,24 +331,20 @@ export async function createDatiCarico(req: Request, res: Response): Promise<voi
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Prenotazioni createDatiCarico error:', err);
-    res.status(500).json({ error: 'Errore nella creazione dati carico' });
+    logger.error({ err }, 'Prenotazioni createDatiCarico error');
+    next(err);
   }
 }
 
-export async function updateDatiCarico(req: Request, res: Response): Promise<void> {
+export async function updateDatiCarico(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
-    const fields = req.body;
-    const keys = Object.keys(fields);
 
-    if (keys.length === 0) {
-      res.status(400).json({ error: 'Nessun campo da aggiornare' });
-      return;
+    const { setClauses, values } = buildUpdateClauses(req.body, DATI_CARICO_ALLOWED);
+
+    if (setClauses.length === 0) {
+      throw new BusinessRuleError('Nessun campo da aggiornare');
     }
-
-    const setClauses = keys.map((key, i) => `${key} = $${i + 2}`);
-    const values = keys.map((key) => fields[key]);
 
     const result = await pool.query(
       `UPDATE dati_carico SET ${setClauses.join(', ')}, updated_at = NOW() WHERE prenotazione_id = $1 RETURNING *`,
@@ -336,13 +352,13 @@ export async function updateDatiCarico(req: Request, res: Response): Promise<voi
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Dati carico non trovati' });
-      return;
+      throw new NotFoundError('Dati carico');
     }
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Prenotazioni updateDatiCarico error:', err);
-    res.status(500).json({ error: 'Errore nell\'aggiornamento dati carico' });
+    if (err instanceof NotFoundError || err instanceof BusinessRuleError) return next(err);
+    logger.error({ err }, 'Prenotazioni updateDatiCarico error');
+    next(err);
   }
 }

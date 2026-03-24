@@ -9,9 +9,11 @@ import {
   Box,
   TextField,
   Typography,
-  Divider,
   Alert,
+  IconButton,
+  InputAdornment,
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import UtenteForm from './UtenteForm';
 import type { Utente } from '@planner-molino/shared';
 import { utentiService } from '../../services';
@@ -30,10 +32,13 @@ export default function UtenteDialog({ open, utente, onClose, onSaved }: UtenteD
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset password sub-dialog
+  // Reset password sub-dialog state
   const [resetOpen, setResetOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   const handleSubmit = async (data: Record<string, unknown>) => {
     setSaving(true);
@@ -58,16 +63,29 @@ export default function UtenteDialog({ open, utente, onClose, onSaved }: UtenteD
   };
 
   const handleResetPassword = async () => {
-    if (!utente) return;
+    if (!utente || newPassword.length < 6) {
+      setResetError('La password deve essere di almeno 6 caratteri');
+      return;
+    }
     setResetting(true);
+    setResetError(null);
     try {
-      await utentiService.resetPassword(utente.id);
+      await utentiService.resetPassword(utente.id, newPassword);
       setResetSuccess(true);
+      setNewPassword('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nel reset password');
+      setResetError(err instanceof Error ? err.message : 'Errore nel reset password');
     } finally {
       setResetting(false);
     }
+  };
+
+  const handleCloseReset = () => {
+    setResetOpen(false);
+    setResetSuccess(false);
+    setNewPassword('');
+    setResetError(null);
+    setShowPassword(false);
   };
 
   return (
@@ -112,23 +130,50 @@ export default function UtenteDialog({ open, utente, onClose, onSaved }: UtenteD
       </Dialog>
 
       {/* Reset Password Sub-Dialog */}
-      <Dialog open={resetOpen} onClose={() => { setResetOpen(false); setResetSuccess(false); }} maxWidth="xs" fullWidth>
+      <Dialog open={resetOpen} onClose={handleCloseReset} maxWidth="xs" fullWidth>
         <DialogTitle>Reset Password</DialogTitle>
         <DialogContent>
           {resetSuccess ? (
             <Alert severity="success">
-              Password resettata con successo. L'utente ricever&agrave; un'email con le istruzioni.
+              Password reimpostata con successo per l'utente <strong>{utente?.username}</strong>.
             </Alert>
           ) : (
-            <Typography variant="body2">
-              Sei sicuro di voler resettare la password per l'utente{' '}
-              <strong>{utente?.username}</strong>? L'utente ricever&agrave; un'email con un link per
-              impostare una nuova password.
-            </Typography>
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                Inserisci la nuova password per l'utente <strong>{utente?.username}</strong>.
+              </Typography>
+              {resetError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {resetError}
+                </Alert>
+              )}
+              <TextField
+                fullWidth
+                size="small"
+                label="Nuova Password"
+                type={showPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                error={!!resetError && newPassword.length < 6}
+                helperText="Minimo 6 caratteri"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setResetOpen(false); setResetSuccess(false); }}>
+          <Button onClick={handleCloseReset}>
             {resetSuccess ? 'Chiudi' : 'Annulla'}
           </Button>
           {!resetSuccess && (
@@ -136,10 +181,10 @@ export default function UtenteDialog({ open, utente, onClose, onSaved }: UtenteD
               variant="contained"
               color="warning"
               onClick={handleResetPassword}
-              disabled={resetting}
+              disabled={resetting || newPassword.length < 6}
               startIcon={resetting ? <CircularProgress size={16} /> : undefined}
             >
-              {resetting ? 'Reset in corso...' : 'Conferma Reset'}
+              {resetting ? 'Reset in corso...' : 'Imposta Password'}
             </Button>
           )}
         </DialogActions>

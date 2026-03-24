@@ -17,42 +17,30 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { LIVELLO_ACCESSO, SEZIONI } from '@planner-molino/shared';
+import {
+  createUtenteSchema,
+  updateUtenteSchema,
+  LIVELLO_ACCESSO,
+  SEZIONI,
+} from '@planner-molino/shared';
 import type { Utente } from '@planner-molino/shared';
 
-// Schema for create
-const createSchema = z
-  .object({
-    username: z.string().min(3, 'Minimo 3 caratteri').max(50),
-    nome: z.string().min(1, 'Obbligatorio').max(100),
-    cognome: z.string().min(1, 'Obbligatorio').max(100),
-    email: z.string().email('Email non valida'),
-    password: z.string().min(6, 'Minimo 6 caratteri'),
+// Extend shared schemas with frontend-only fields
+// conferma_password is UI-only — not sent to the backend
+const createFormSchema = createUtenteSchema
+  .extend({
     conferma_password: z.string().min(1, 'Conferma la password'),
-    telefono: z.string().max(30).optional().or(z.literal('')),
-    ruolo: z.string().max(100).optional().or(z.literal('')),
-    livello_accesso: z.enum(['visualizzazione', 'modifica']),
-    sezioni_abilitate: z.array(z.enum(['produzione', 'consegne'])).min(1, 'Seleziona almeno una sezione'),
   })
   .refine((data) => data.password === data.conferma_password, {
     message: 'Le password non corrispondono',
     path: ['conferma_password'],
   });
 
-// Schema for edit
-const editSchema = z.object({
-  username: z.string().min(3).max(50),
-  nome: z.string().min(1, 'Obbligatorio').max(100),
-  cognome: z.string().min(1, 'Obbligatorio').max(100),
-  email: z.string().email('Email non valida'),
-  telefono: z.string().max(30).optional().or(z.literal('')),
-  ruolo: z.string().max(100).optional().or(z.literal('')),
-  livello_accesso: z.enum(['visualizzazione', 'modifica']),
-  sezioni_abilitate: z.array(z.enum(['produzione', 'consegne'])).min(1, 'Seleziona almeno una sezione'),
-});
+// Edit schema uses shared updateUtenteSchema directly — no frontend-only fields needed
+const editFormSchema = updateUtenteSchema;
 
-type CreateFormData = z.infer<typeof createSchema>;
-type EditFormData = z.infer<typeof editSchema>;
+type CreateFormData = z.infer<typeof createFormSchema>;
+type EditFormData = z.infer<typeof editFormSchema>;
 
 interface UtenteFormProps {
   utente?: Utente | null;
@@ -69,7 +57,7 @@ export default function UtenteForm({ utente, onSubmit, formId }: UtenteFormProps
     handleSubmit,
     formState: { errors },
   } = useForm<CreateFormData | EditFormData>({
-    resolver: zodResolver(isEdit ? editSchema : createSchema),
+    resolver: zodResolver(isEdit ? editFormSchema : createFormSchema),
     defaultValues: isEdit
       ? {
           username: utente.username,
@@ -287,13 +275,14 @@ export default function UtenteForm({ utente, onSubmit, formId }: UtenteFormProps
                       key={key}
                       control={
                         <Checkbox
-                          checked={field.value.includes(key as 'produzione' | 'consegne')}
+                          checked={(field.value ?? []).includes(key as 'produzione' | 'consegne')}
                           onChange={(e) => {
                             const val = key as 'produzione' | 'consegne';
+                            const current = field.value ?? [];
                             if (e.target.checked) {
-                              field.onChange([...field.value, val]);
+                              field.onChange([...current, val]);
                             } else {
-                              field.onChange(field.value.filter((v: string) => v !== val));
+                              field.onChange(current.filter((v: string) => v !== val));
                             }
                           }}
                         />

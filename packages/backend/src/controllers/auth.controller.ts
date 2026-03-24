@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { supabaseAdmin } from '../lib/supabaseAdmin';
 import pool from '../config/database';
+import { logger } from '../lib/logger';
 
-export async function login(req: Request, res: Response): Promise<void> {
+export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, password } = req.body;
 
@@ -39,8 +40,8 @@ export async function login(req: Request, res: Response): Promise<void> {
       user: result.rows[0],
     });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Errore durante il login' });
+    logger.error({ err }, 'Login error');
+    next(err);
   }
 }
 
@@ -48,7 +49,7 @@ export async function me(req: Request, res: Response): Promise<void> {
   res.json({ user: req.user });
 }
 
-export async function changePassword(req: Request, res: Response): Promise<void> {
+export async function changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { newPassword } = req.body;
 
@@ -64,7 +65,7 @@ export async function changePassword(req: Request, res: Response): Promise<void>
 
     res.json({ message: 'Password aggiornata con successo' });
   } catch (err) {
-    console.error('Change password error:', err);
-    res.status(500).json({ error: 'Errore durante il cambio password' });
+    logger.error({ err }, 'Change password error');
+    next(err);
   }
 }

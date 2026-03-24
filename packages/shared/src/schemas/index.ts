@@ -4,3 +4,4 @@ export * from './trasportatore.schema';
 export * from './prenotazione.schema';
 export * from './dati-carico.schema';
 export * from './utente.schema';
+export * from './configurazione.schema';

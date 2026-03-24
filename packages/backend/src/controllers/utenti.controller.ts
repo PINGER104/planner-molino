@@ -1,12 +1,17 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { supabaseAdmin } from '../lib/supabaseAdmin';
 import pool from '../config/database';
+import { logger } from '../lib/logger';
+import { sanitizeSearch, buildUpdateClauses } from '../lib/queryBuilder';
+import { NotFoundError, BusinessRuleError } from '../lib/errors';
 
-function sanitizeSearch(input: string): string {
-  return input.replace(/[%_'\\]/g, '').trim();
-}
+// Column whitelist — only these columns can be SET via update()
+const UTENTI_ALLOWED = [
+  'username', 'nome', 'cognome', 'email', 'telefono', 'ruolo',
+  'livello_accesso', 'sezioni_abilitate',
+] as const;
 
-export async function list(req: Request, res: Response): Promise<void> {
+export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
@@ -54,12 +59,12 @@ export async function list(req: Request, res: Response): Promise<void> {
       totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error('Utenti list error:', err);
-    res.status(500).json({ error: 'Errore nel recupero utenti' });
+    logger.error({ err }, 'Utenti list error');
+    next(err);
   }
 }
 
-export async function getById(req: Request, res: Response): Promise<void> {
+export async function getById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -69,18 +74,18 @@ export async function getById(req: Request, res: Response): Promise<void> {
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Utente non trovato' });
-      return;
+      throw new NotFoundError('Utente');
     }
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Utenti getById error:', err);
-    res.status(500).json({ error: 'Errore nel recupero utente' });
+    if (err instanceof NotFoundError) return next(err);
+    logger.error({ err }, 'Utenti getById error');
+    next(err);
   }
 }
 
-export async function create(req: Request, res: Response): Promise<void> {
+export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, password, username, nome, cognome, livello_accesso, sezioni_abilitate, telefono, ruolo } = req.body;
 
@@ -114,31 +119,32 @@ export async function create(req: Request, res: Response): Promise<void> {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Utenti create error:', err);
-    res.status(500).json({ error: 'Errore nella creazione utente' });
+    logger.error({ err }, 'Utenti create error');
+    next(err);
   }
 }
 
-export async function update(req: Request, res: Response): Promise<void> {
+export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
-    const fields = { ...req.body };
+
+    // Pre-filter body based on self-protection rules BEFORE building clauses
+    const isSelf = req.user!.id === id;
+    const updateBody = { ...req.body };
 
     // Self-protection: cannot change own livello_accesso or attivo
-    if (req.user!.id === id) {
-      delete fields.livello_accesso;
-      delete fields.attivo;
+    if (isSelf) {
+      delete updateBody.livello_accesso;
+      delete updateBody.attivo;
     }
 
-    const keys = Object.keys(fields);
+    // Build update using only whitelisted columns (attivo included for non-self edits)
+    const allowedWithAttivo = isSelf ? UTENTI_ALLOWED : [...UTENTI_ALLOWED, 'attivo'] as const;
+    const { setClauses, values } = buildUpdateClauses(updateBody, allowedWithAttivo);
 
-    if (keys.length === 0) {
-      res.status(400).json({ error: 'Nessun campo da aggiornare' });
-      return;
+    if (setClauses.length === 0) {
+      throw new BusinessRuleError('Nessun campo da aggiornare');
     }
-
-    const setClauses = keys.map((key, i) => `${key} = $${i + 2}`);
-    const values = keys.map((key) => fields[key]);
 
     const result = await pool.query(
       `UPDATE utenti SET ${setClauses.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING id, username, nome, cognome, email, telefono, ruolo, livello_accesso, sezioni_abilitate, attivo`,
@@ -146,33 +152,29 @@ export async function update(req: Request, res: Response): Promise<void> {
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Utente non trovato' });
-      return;
+      throw new NotFoundError('Utente');
     }
 
     // Sync email to Supabase Auth if changed
-    if (fields.email) {
-      await supabaseAdmin.auth.admin.updateUserById(id, { email: fields.email });
+    if (req.body.email) {
+      await supabaseAdmin.auth.admin.updateUserById(id as string, { email: req.body.email });
     }
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Utenti update error:', err);
-    res.status(500).json({ error: 'Errore nell\'aggiornamento utente' });
+    if (err instanceof NotFoundError || err instanceof BusinessRuleError) return next(err);
+    logger.error({ err }, 'Utenti update error');
+    next(err);
   }
 }
 
-export async function resetPassword(req: Request, res: Response): Promise<void> {
+export async function resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
+    // Body is already validated by Zod (resetPasswordSchema)
     const { newPassword } = req.body;
 
-    if (!newPassword || newPassword.length < 6) {
-      res.status(400).json({ error: 'Password deve essere di almeno 6 caratteri' });
-      return;
-    }
-
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(id, {
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(id as string, {
       password: newPassword,
     });
 
@@ -183,19 +185,18 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
 
     res.json({ message: 'Password reimpostata con successo' });
   } catch (err) {
-    console.error('Utenti resetPassword error:', err);
-    res.status(500).json({ error: 'Errore nel reset password' });
+    logger.error({ err }, 'Utenti resetPassword error');
+    next(err);
   }
 }
 
-export async function remove(req: Request, res: Response): Promise<void> {
+export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
 
     // Cannot deactivate self
     if (req.user!.id === id) {
-      res.status(400).json({ error: 'Non puoi disattivare il tuo account' });
-      return;
+      throw new BusinessRuleError('Non puoi disattivare il tuo account');
     }
 
     const result = await pool.query(
@@ -204,13 +205,13 @@ export async function remove(req: Request, res: Response): Promise<void> {
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Utente non trovato' });
-      return;
+      throw new NotFoundError('Utente');
     }
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('Utenti remove error:', err);
-    res.status(500).json({ error: 'Errore nella disattivazione utente' });
+    if (err instanceof NotFoundError || err instanceof BusinessRuleError) return next(err);
+    logger.error({ err }, 'Utenti remove error');
+    next(err);
   }
 }

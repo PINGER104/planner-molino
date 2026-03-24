@@ -7,6 +7,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 import express from 'express';
 import cors from 'cors';
 import { apiLimiter } from './middleware/rateLimit';
+import { AppError } from './lib/errors';
+import { logger } from './lib/logger';
 import authRoutes from './routes/auth.routes';
 import clientiRoutes from './routes/clienti.routes';
 import trasportatoriRoutes from './routes/trasportatori.routes';
@@ -37,17 +39,26 @@ app.use('/api/prenotazioni', prenotazioniRoutes);
 app.use('/api/utenti', utentiRoutes);
 app.use('/api/configurazione', configurazioneRoutes);
 
-// Error handler
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Errore interno del server' });
+// Centralized error handler — all controllers delegate here via next(err)
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err instanceof AppError) {
+    logger.warn({ err, code: err.code }, err.message);
+    res.status(err.statusCode).json({
+      error: err.message,
+      code: err.code,
+      ...(err.details ? { details: err.details } : {}),
+    });
+    return;
+  }
+  logger.error({ err }, 'Unhandled error');
+  res.status(500).json({ error: 'Errore interno del server', code: 'INTERNAL_ERROR' });
 });
 
 // Start server (dev only, not used on Vercel)
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3001;
   app.listen(PORT, () => {
-    console.log(`Backend running on http://localhost:${PORT}`);
+    logger.info(`Backend running on http://localhost:${PORT}`);
   });
 }
 

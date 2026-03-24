@@ -16,14 +16,7 @@ import StatusDistribution from '../components/dashboard/StatusDistribution';
 import TimelineStrip from '../components/dashboard/TimelineStrip';
 import { configurazioneService, prenotazioniService } from '../services';
 import { useAuth } from '../contexts/AuthContext';
-import type { Prenotazione } from '@planner-molino/shared';
-
-interface DashboardStats {
-  prenotazioniOggi: number;
-  prenotazioniSettimana: number;
-  clientiAttivi: number;
-  trasportatoriAttivi: number;
-}
+import type { Prenotazione, DashboardStats } from '@planner-molino/shared';
 
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
@@ -67,19 +60,13 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Derive KPI values
-  const oggiTotale = stats?.prenotazioniOggi ?? prenotazioniOggi.length;
-  const oggiInCorso = prenotazioniOggi.filter(
-    (p) => ['preso_in_carico', 'in_produzione', 'in_preparazione', 'in_carico'].includes(p.stato)
-  ).length;
-  const oggiCompletate = prenotazioniOggi.filter(
-    (p) => ['completato', 'caricato', 'partito'].includes(p.stato)
-  ).length;
-  const inAttesa = prenotazioniOggi.filter(
-    (p) => ['pianificato', 'pronto_carico'].includes(p.stato)
-  ).length;
+  // KPI values from backend stats (already computed server-side)
+  const oggiTotale = stats?.oggi_totale ?? prenotazioniOggi.length;
+  const oggiInCorso = stats?.oggi_in_corso ?? 0;
+  const oggiCompletate = stats?.oggi_completate ?? 0;
+  const inAttesa = stats?.in_attesa ?? 0;
 
-  // Split by tipologia
+  // Split by tipologia (for table/timeline display)
   const produzioneOggi = prenotazioniOggi.filter((p) => p.tipologia === 'produzione');
   const consegneOggi = prenotazioniOggi.filter((p) => p.tipologia === 'consegna');
 
@@ -199,7 +186,7 @@ export default function DashboardPage() {
                     fontFamily: '"Sora", sans-serif',
                   }}
                 >
-                  {produzioneOggi.length}
+                  {stats?.produzione_oggi ?? produzioneOggi.length}
                 </Typography>
               </Stack>
               <StatusDistribution prenotazioni={produzioneOggi} title="" />
@@ -242,7 +229,7 @@ export default function DashboardPage() {
                     fontFamily: '"Sora", sans-serif',
                   }}
                 >
-                  {consegneOggi.length}
+                  {stats?.consegne_oggi ?? consegneOggi.length}
                 </Typography>
               </Stack>
               <StatusDistribution prenotazioni={consegneOggi} title="" />
